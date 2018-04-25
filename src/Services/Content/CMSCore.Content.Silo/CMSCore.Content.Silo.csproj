@@ -6,20 +6,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="EFCore.Repository" Version="1.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.1.0-preview2-final" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="2.1.0-preview2-final" />
-    <PackageReference Include="Microsoft.Orleans.Clustering.AzureStorage" Version="$(OrleansPackageVersion)" />
-    <PackageReference Include="Microsoft.Orleans.Core.Legacy" Version="$(OrleansPackageVersion)" />
-    <PackageReference Include="Microsoft.Orleans.OrleansCodeGenerator.Build" Version="$(OrleansPackageVersion)" />
-    <PackageReference Include="Microsoft.Orleans.Reminders.AzureStorage" Version="$(OrleansPackageVersion)" />
-    <PackageReference Include="Microsoft.Orleans.Runtime.Legacy" Version="$(OrleansPackageVersion)" />
-    <PackageReference Include="Microsoft.Orleans.Server" Version="$(OrleansPackageVersion)" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Orleans.Clustering.AzureStorage" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Orleans.Core.Legacy" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Orleans.OrleansCodeGenerator.Build" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Orleans.Reminders.AzureStorage" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Orleans.Runtime.Legacy" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Orleans.Server" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.1.0-preview2-final" />
    </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CMSCore.Content.Configuration\CMSCore.Shared.Configuration.csproj" />
+    <ProjectReference Include="..\..\..\Core\CMSCore.Shared.Configuration\CMSCore.Shared.Configuration.csproj" />
     <ProjectReference Include="..\CMSCore.Content.Data\CMSCore.Content.Data.csproj" />
     <ProjectReference Include="..\CMSCore.Content.Grains\CMSCore.Content.Grains.csproj" />
   </ItemGroup>

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 
 namespace CMSCore.Content.Models.Shared
 {
@@ -25,13 +23,17 @@ namespace CMSCore.Content.Models.Shared
     public class UpdateOperation<TEntity>
         where TEntity : EntityBase
     {
-        public UpdateOperation(string userId, TEntity entity)
+        public UpdateOperation(string userId, string entityId, TEntity entity)
         {
             UserId = userId;
+            EntityId = entityId;
             Entity = entity;
+
+            //Entity.EntityHistory.Add(new EntityHistory(entity.Id, userId, OperationType.Update));
         }
 
         public string UserId { get; set; }
+        public string EntityId { get; set; }
         public TEntity Entity { get; set; }
     }
 
@@ -44,8 +46,27 @@ namespace CMSCore.Content.Models.Shared
             EntityId = entityId;
         }
 
+        public DeleteOperation(string userId, string entityId, TEntity entity)
+        {
+            UserId = userId;
+            EntityId = entityId;
+            Entity = entity;
+
+            Entity.EntityHistory.Add(new EntityHistory(entity.Id, userId, OperationType.Delete));
+        }
+
         public string UserId { get; set; }
         public string EntityId { get; set; }
-        public Type EntityType => typeof(TEntity);
+        public TEntity Entity { get; set; }
+    }
+
+    public static class OperationExtensions
+    {
+        public static TEntity AddDeleteHistory<TEntity>(this TEntity entity, string userId)
+            where TEntity : EntityBase
+        {
+            entity.EntityHistory.Add(new EntityHistory(entity.Id, userId, OperationType.Delete));
+            return entity;
+        }
     }
 }

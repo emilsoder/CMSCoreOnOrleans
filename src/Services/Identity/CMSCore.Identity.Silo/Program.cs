@@ -8,11 +8,10 @@ using CMSCore.Identity.Data.Extensions;
 using CMSCore.Identity.Grains;
 using CMSCore.Identity.Models;
 using CMSCore.Shared.Configuration;
-using EFCore.Repository;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Orleans;
 using Orleans.Configuration;
 using Orleans.Hosting;
 
@@ -33,9 +32,9 @@ namespace CMSCore.Identity.Silo
                     options.ClusterId = ClusterOptionsConst.ClusterId;
                     options.ServiceId = ClusterOptionsConst.ServiceId;
                 })
-                .ConfigureServices(services => { services.ConfigureRepository(); })
+                .ConfigureServices(services => { services.ConfigureIdentityServices(); })
                 .UseAzureStorageClustering(options => options.ConnectionString = connectionString)
-                .ConfigureEndpoints(siloPort: 11111, gatewayPort: 30000)
+                .ConfigureEndpoints(11111, 30000)
                 .ConfigureApplicationParts(parts =>
                 {
                     parts.AddApplicationPart(typeof(AuthenticationGrain).Assembly).WithReferences();
@@ -72,9 +71,10 @@ namespace CMSCore.Identity.Silo
 
     public static class DependencyInjection
     {
-        public static IServiceCollection ConfigureRepository(this IServiceCollection services)
+        public static IServiceCollection ConfigureIdentityServices(this IServiceCollection services)
         {
-            services.AddDbContext<CMSCoreIdentityDbContext>(IdentityDbContextOptions.DefaultPostgresOptionsBuilder, ServiceLifetime.Singleton);
+            services.AddDbContext<CMSCoreIdentityDbContext>(IdentityDbContextOptions.DefaultPostgresOptionsBuilder,
+                ServiceLifetime.Singleton);
             services.AddIdentity<ApplicationUser, IdentityRole<string>>(x =>
             {
                 x.Password.RequireDigit = false;
@@ -85,13 +85,12 @@ namespace CMSCore.Identity.Silo
                 x.Password.RequiredUniqueChars = 0;
 
                 x.User.RequireUniqueEmail = true;
-                
+
                 x.ClaimsIdentity.RoleClaimType = ClaimTypes.Role;
                 x.ClaimsIdentity.UserIdClaimType = ClaimTypes.NameIdentifier;
                 x.ClaimsIdentity.UserNameClaimType = ClaimTypes.Name;
             });
 
-            services.AddSingleton<IRepository, RepositoryBase>();
             return services;
         }
     }

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CMSCore.Content.Models
 {
@@ -16,6 +15,7 @@ namespace CMSCore.Content.Models
                 NormalizedTitle = _title.NormalizeToSlug();
             }
         }
+
         public string NormalizedTitle { get; set; }
         public string Description { get; set; }
 

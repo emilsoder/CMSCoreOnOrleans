@@ -6,19 +6,18 @@ namespace CMSCore.Content.Models
 {
     public abstract class EntityBase
     {
-        private bool _isRemoved = false;
+        private bool _isRemoved;
 
         protected EntityBase()
         {
             Id = Guid.NewGuid().ToString();
             Created = DateTime.Now;
-            Modified = DateTime.Now; 
+            Modified = DateTime.Now;
         }
 
-        [Key]
-        public virtual string Id { get; set; }
+        [Key] public virtual string Id { get; set; }
 
-        public virtual bool IsDisabled { get; set; } = false;
+        public virtual bool IsDisabled { get; set; }
 
         public virtual bool IsRemoved
         {
@@ -33,6 +32,6 @@ namespace CMSCore.Content.Models
         public virtual DateTime Created { get; set; }
         public virtual DateTime Modified { get; set; }
 
-        public virtual List<EntityHistory> EntityHistory { get; set; }  
+        public virtual List<EntityHistory> EntityHistory { get; set; }
     }
 }

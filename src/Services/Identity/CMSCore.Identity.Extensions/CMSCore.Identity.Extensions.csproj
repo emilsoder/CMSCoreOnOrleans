@@ -5,17 +5,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.1.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.2.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\CMSCore.Content.Configuration\CMSCore.Shared.Configuration.csproj" />
+    <ProjectReference Include="..\..\..\Core\CMSCore.Shared.Abstractions\CMSCore.Shared.Abstractions.csproj" />
+    <ProjectReference Include="..\..\..\Core\CMSCore.Shared.Configuration\CMSCore.Shared.Configuration.csproj" />
+    <ProjectReference Include="..\CMSCore.Identity.Models\CMSCore.Identity.Models.csproj" />
   </ItemGroup>
-
+ 
+  
   <ItemGroup>
-    <Reference Include="Microsoft.Extensions.Logging.Abstractions">
-      <HintPath>C:\Program Files\dotnet\sdk\NuGetFallbackFolder\microsoft.extensions.logging.abstractions\2.0.1\lib\netstandard2.0\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
-    </Reference>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.1.0-preview2-final" />
   </ItemGroup>
 
 </Project>

@@ -4,7 +4,9 @@ namespace CMSCore.Content.Models
 {
     public class EntityHistory
     {
-        public EntityHistory(){}
+        public EntityHistory()
+        {
+        }
 
         public EntityHistory(string entityId, string userId, OperationType operationType)
         {
@@ -12,6 +14,7 @@ namespace CMSCore.Content.Models
             UserId = userId;
             OperationType = operationType;
         }
+
         public string Id { get; set; } = Guid.NewGuid().ToString();
 
         public string EntityId { get; set; }

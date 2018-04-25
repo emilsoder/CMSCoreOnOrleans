@@ -4,10 +4,7 @@ namespace CMSCore.Content.Models
 {
     public class RemovedEntity
     {
-        public RemovedEntity()
-        {
-            Id = Guid.NewGuid().ToString();
-        }
+        public RemovedEntity() => Id = Guid.NewGuid().ToString();
 
         public RemovedEntity(string entityId, string removedByUserId) : this()
         {

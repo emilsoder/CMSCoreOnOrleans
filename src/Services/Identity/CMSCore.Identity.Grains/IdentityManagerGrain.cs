@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CMSCore.Identity.Extensions;
 using CMSCore.Identity.GrainInterfaces;
 using CMSCore.Identity.Models;
 using CMSCore.Identity.Models.ManageViewModels;
-using CMSCore.Shared.Abstractions;
+using CMSCore.Shared.Abstractions.Extensions;
+using CMSCore.Shared.Abstractions.Types.Results;
+using CMSCore.Shared.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Orleans;
 
@@ -15,11 +17,10 @@ namespace CMSCore.Identity.Grains
 {
     public class IdentityManagerGrain : Grain, IIdentityManagerGrain
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
-
         private readonly IEmailSender _emailSender;
         private readonly ILogger<IdentityManagerGrain> _logger;
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
         public IdentityManagerGrain(
             UserManager<ApplicationUser> userManager,
@@ -57,10 +58,7 @@ namespace CMSCore.Identity.Grains
             try
             {
                 var user = await _userManager.FindByIdAsync(userId);
-                if (user == null)
-                {
-                    throw new Exception($"Unable to load user");
-                }
+                if (user == null) throw new Exception($"Unable to load user");
 
                 return new IdentityUserViewModel
                 {
@@ -82,10 +80,7 @@ namespace CMSCore.Identity.Grains
             try
             {
                 var user = await _userManager.FindByEmailAsync(model.Email);
-                if (user == null)
-                {
-                    throw new Exception($"Unable to load user");
-                }
+                if (user == null) throw new Exception($"Unable to load user");
 
                 var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 
@@ -107,15 +102,9 @@ namespace CMSCore.Identity.Grains
             try
             {
                 var user = await _userManager.FindByIdAsync(userId);
-                if (user == null)
-                {
-                    throw new Exception($"Unable to load user");
-                }
+                if (user == null) throw new Exception($"Unable to load user");
 
-                if (await _userManager.HasPasswordAsync(user))
-                {
-                    throw new Exception("User already has password.");
-                }
+                if (await _userManager.HasPasswordAsync(user)) throw new Exception("User already has password.");
 
                 await _userManager.AddPasswordAsync(user, model.NewPassword);
 
@@ -137,15 +126,10 @@ namespace CMSCore.Identity.Grains
                 if (user == null)
                     throw new Exception($"Unable to load user");
 
-                if (model.Email != user.Email)
-                {
-                    await _userManager.SetEmailAsync(user, model.Email);
-                }
+                if (model.Email != user.Email) await _userManager.SetEmailAsync(user, model.Email);
 
                 if (model.PhoneNumber != user.PhoneNumber)
-                {
                     await _userManager.SetPhoneNumberAsync(user, model.PhoneNumber);
-                }
 
                 return OperationResult.Success;
             }
@@ -284,9 +268,9 @@ namespace CMSCore.Identity.Grains
             }
         }
 
-        public IEnumerable<string> GetIdentityRoles()
+        public async Task<IEnumerable<string>> GetIdentityRoles()
         {
-            return _roleManager.Roles?.Select(x => x.NormalizedName);
+            return await _roleManager.Roles?.Select(x => x.NormalizedName)?.ToListAsync();
         }
     }
 }

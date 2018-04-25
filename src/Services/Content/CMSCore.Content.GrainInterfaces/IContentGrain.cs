@@ -1,14 +1,31 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using CMSCore.Content.Models;
 using CMSCore.Content.Models.Shared;
-using CMSCore.Shared.Abstractions;
+using CMSCore.Shared.Abstractions.Types.Results;
 using Orleans;
 
 namespace CMSCore.Content.GrainInterfaces
 {
     public interface IContentGrain : IGrainWithGuidKey
     {
+        #region READ
+
+        Task<IEnumerable<Page>> Pages();
+        Task<Page> PageById(string id);
+
+        Task<IEnumerable<Blog>> Blogs();
+
+        Task<IEnumerable<BlogPost>> BlogPosts();
+        Task<IEnumerable<BlogPost>> BlogPosts(string blogId);
+        Task<BlogPost> BlogPostDetails(string blogPostId);
+
+        Task<IEnumerable<RemovedEntity>> RemovedEntities();
+        Task<IEnumerable<EntityHistory>> EntityHistory();
+
+        #endregion
+
+
         #region Create
 
         Task<IOperationResult> Create(CreateOperation<Page> model);

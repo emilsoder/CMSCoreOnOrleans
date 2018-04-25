@@ -5,9 +5,7 @@ namespace CMSCore.Identity.Data.Factory
 {
     public class IdentityDbContextFactory : IDesignTimeDbContextFactory<CMSCoreIdentityDbContext>
     {
-        public CMSCoreIdentityDbContext CreateDbContext(string[] args)
-        { 
-            return new CMSCoreIdentityDbContext(IdentityDbContextOptions.DefaultPostgresOptions);
-        }
+        public CMSCoreIdentityDbContext CreateDbContext(string[] args) =>
+            new CMSCoreIdentityDbContext(IdentityDbContextOptions.DefaultPostgresOptions);
     }
 }

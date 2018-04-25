@@ -11,11 +11,33 @@ namespace CMSCore.Content.Data
         {
         }
 
+        public DbSet<User> Users { get; set; }
+        public DbSet<Page> Pages { get; set; }
+
+        public DbSet<Blog> Blogs { get; set; }
+        public DbSet<BlogPost> BlogPosts { get; set; }
+        public DbSet<BlogPostTag> BlogPostTags { get; set; }
+        public DbSet<Tag> Tags { get; set; }
+
+        public DbSet<StaticContent> StaticContents { get; set; }
+
+        public DbSet<EntityHistory> EntityHistory { get; set; }
+        public DbSet<RemovedEntity> RemovedEntities { get; set; }
+
+        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        //{
+        //    if (!optionsBuilder.IsConfigured) 
+        //        optionsBuilder.UseNpgsql(DatabaseConnectionConst.CMSCore)
+        //            .UseLazyLoadingProxies();
+
+        //    base.OnConfiguring(optionsBuilder);
+        //}
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>().HasKey(x => x.Id);
             modelBuilder.Entity<Page>().HasKey(x => x.Id);
-            
+
             modelBuilder.Entity<Blog>().HasKey(x => x.Id);
             modelBuilder.Entity<BlogPost>().HasKey(x => x.Id);
             modelBuilder.Entity<Tag>().HasKey(x => x.Id);
@@ -34,26 +56,11 @@ namespace CMSCore.Content.Data
                 .HasIndex(x => x.IdentityUserId)
                 .IsUnique();
 
-
             modelBuilder.Entity<BlogPost>()
-                .HasOne<Blog>(x => x.Blog)
+                .HasOne(x => x.Blog)
                 .WithMany(x => x.BlogPosts)
                 .HasForeignKey(x => x.BlogId);
-
         }
-
-        public DbSet<User> Users { get; set; }
-        public DbSet<Page> Pages { get; set; }
-
-        public DbSet<Blog> Blogs { get; set; }
-        public DbSet<BlogPost> BlogPosts { get; set; }
-        public DbSet<BlogPostTag> BlogPostTags { get; set; }
-        public DbSet<Tag> Tags { get; set; }
-
-        public DbSet<StaticContent> StaticContents { get; set; }
-
-        public DbSet<EntityHistory> EntityHistory { get; set; }
-        public DbSet<RemovedEntity> RemovedEntities { get; set; }
     }
 
     public class ContentDbContextOptions
@@ -61,10 +68,18 @@ namespace CMSCore.Content.Data
         public static DbContextOptions DefaultPostgresOptions =>
             new DbContextOptionsBuilder()
                 .UseNpgsql(DatabaseConnectionConst.CMSCore)
+                .UseLazyLoadingProxies()
                 .Options;
 
         public static Action<DbContextOptionsBuilder> DefaultPostgresOptionsBuilder
-            => builder => new DbContextOptionsBuilder().UseNpgsql(DatabaseConnectionConst.CMSCore);
+            => builder => new DbContextOptionsBuilder()
+                .UseNpgsql(DatabaseConnectionConst.CMSCore);
+        //.UseLazyLoadingProxies();
+
+        public static DbContextOptionsBuilder DefaultPostgresOptionsBuild
+            => new DbContextOptionsBuilder()
+                .UseNpgsql(DatabaseConnectionConst.CMSCore)
+                .UseLazyLoadingProxies();
     }
 
     public class ContentDbContextFactory : IDesignTimeDbContextFactory<ContentDbContext>

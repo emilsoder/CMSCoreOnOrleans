@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using CMSCore.Content.Data;
 using CMSCore.Content.Grains;
 using CMSCore.Shared.Configuration;
-using EFCore.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -22,7 +21,7 @@ namespace CMSCore.Content.Silo
 
         private static void Main(string[] args)
         {
-            var connectionString = AzureStorageConst.CMSCoreConnectionString;
+            //var connectionString = AzureStorageConst.CMSCoreConnectionString;            
 
             silo = new SiloHostBuilder()
                 .Configure<ClusterOptions>(options =>
@@ -31,15 +30,21 @@ namespace CMSCore.Content.Silo
                     options.ServiceId = ClusterOptionsConst.ServiceId;
                 })
                 .ConfigureServices(services => { services.ConfigureRepository(); })
-                .UseAzureStorageClustering(options => options.ConnectionString = connectionString)
-                .ConfigureEndpoints(siloPort: 11111, gatewayPort: 30000)
+                .UseLocalhostClustering()
+                //.UseAzureStorageClustering(options => options.ConnectionString = connectionString)
+                //.ConfigureEndpoints(siloPort: 11111, gatewayPort: 30000)
                 .ConfigureApplicationParts(parts =>
                 {
-                    parts.AddApplicationPart(typeof(ContentGrain).Assembly).WithReferences();
-                     parts.AddApplicationPart(typeof(AccountGrain).Assembly).WithReferences(); 
+                    parts.AddApplicationPart(typeof(ContentGrain).Assembly)
+                        .WithReferences();
+                    parts.AddApplicationPart(typeof(AccountGrain).Assembly)
+                        .WithReferences();
                 })
-                .ConfigureLogging(builder => builder.SetMinimumLevel(LogLevel.Warning)
-                    .AddConsole())
+                .ConfigureLogging(builder =>
+                {
+                    builder.SetMinimumLevel(LogLevel.Information)
+                        .AddConsole();
+                })
                 .Build();
 
             Task.Run(StartSilo);
@@ -71,9 +76,11 @@ namespace CMSCore.Content.Silo
     {
         public static IServiceCollection ConfigureRepository(this IServiceCollection services)
         {
-            services.AddDbContext<ContentDbContext>(ContentDbContextOptions.DefaultPostgresOptionsBuilder, ServiceLifetime.Singleton);
-            services.AddScoped<DbContext>(provider => provider.GetService<ContentDbContext>());
-            services.AddSingleton<IRepository, RepositoryBase>();
+            //services.AddDbContext<ContentDbContext>(x => x.UseNpgsql(DatabaseConnectionConst.CMSCore), ServiceLifetime.Singleton);
+            services.AddDbContext<ContentDbContext>(x => x.UseNpgsql(DatabaseConnectionConst.CMSCore),
+                ServiceLifetime.Singleton);
+            //services.AddScoped<ContentDbContext>(provider => provider.GetService<ContentDbContext>());
+            //services.AddSingleton<IRepository, RepositoryBase>(x => new RepositoryBase(x.GetService<DbContext>()));ContentDbContextOptions.DefaultPostgresOptionsBuilder
             return services;
         }
     }

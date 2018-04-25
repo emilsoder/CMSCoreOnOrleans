@@ -10,6 +10,5 @@
         public IdentityRoleViewModel[] Roles { get; set; }
 
         public string JwtToken { get; set; }
-
     }
 }

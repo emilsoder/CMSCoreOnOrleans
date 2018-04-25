@@ -10,7 +10,7 @@ namespace CMSCore.Content.Models
             try
             {
                 if (string.IsNullOrEmpty(input)) return input;
-                
+
                 var arr = input.ToCharArray();
                 arr = Array.FindAll(arr, c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c));
                 return Regex.Replace(new string(arr), @"\s+", "-").ToLower().Normalize();

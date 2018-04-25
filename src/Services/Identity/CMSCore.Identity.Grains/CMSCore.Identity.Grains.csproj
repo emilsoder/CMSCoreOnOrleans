@@ -5,31 +5,24 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="EFCore.Repository" Version="1.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.1.0-preview2-final" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.1.0-preview2-final" />
-    <PackageReference Include="Microsoft.Orleans.Core.Abstractions" Version="$(OrleansPackageVersion)" />
-    <PackageReference Include="Microsoft.Orleans.OrleansCodeGenerator.Build" Version="$(OrleansPackageVersion)" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.1.0" />
+  
+    <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.1.0-preview2-final" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.1.0-preview2-final" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="2.1.0-preview2-final" />
+
+    <PackageReference Include="Microsoft.Orleans.Core.Abstractions" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Orleans.OrleansCodeGenerator.Build" Version="2.0.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.2.1" />
     <PackageReference Include="System.Runtime" Version="4.3.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\CMSCore.Content.Configuration\CMSCore.Shared.Configuration.csproj" />
-    <ProjectReference Include="..\CMSCore.Identity.Data\CMSCore.Identity.Data.csproj" />
-    <ProjectReference Include="..\CMSCore.Identity.Extensions\CMSCore.Identity.Extensions.csproj" />
+    <ProjectReference Include="..\..\..\Core\CMSCore.Shared.Abstractions\CMSCore.Shared.Abstractions.csproj" />
+    <ProjectReference Include="..\..\..\Core\CMSCore.Shared.Services\CMSCore.Shared.Services.csproj" />
     <ProjectReference Include="..\CMSCore.Identity.GrainInterfaces\CMSCore.Identity.GrainInterfaces.csproj" />
+    <ProjectReference Include="..\CMSCore.Identity.Models\CMSCore.Identity.Models.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Microsoft.AspNetCore.Identity">
-      <HintPath>C:\Program Files\dotnet\sdk\NuGetFallbackFolder\microsoft.aspnetcore.identity\2.0.2\lib\netstandard2.0\Microsoft.AspNetCore.Identity.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.AspNetCore.Mvc.Abstractions">
-      <HintPath>C:\Users\soder\.nuget\packages\microsoft.aspnetcore.mvc.abstractions\2.0.2\lib\netstandard2.0\Microsoft.AspNetCore.Mvc.Abstractions.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Extensions.Identity.Core">
-      <HintPath>C:\Users\soder\.nuget\packages\microsoft.extensions.identity.core\2.0.1\lib\netstandard2.0\Microsoft.Extensions.Identity.Core.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
+ 
 </Project>

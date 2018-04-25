@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace CMSCore.Content.Data.Migrations
@@ -9,8 +8,8 @@ namespace CMSCore.Content.Data.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Blogs",
-                columns: table => new
+                "Blogs",
+                table => new
                 {
                     Id = table.Column<string>(nullable: false),
                     IsDisabled = table.Column<bool>(nullable: false),
@@ -20,28 +19,22 @@ namespace CMSCore.Content.Data.Migrations
                     Title = table.Column<string>(nullable: true),
                     Description = table.Column<string>(nullable: true)
                 },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Blogs", x => x.Id);
-                });
+                constraints: table => { table.PrimaryKey("PK_Blogs", x => x.Id); });
 
             migrationBuilder.CreateTable(
-                name: "RemovedEntities",
-                columns: table => new
+                "RemovedEntities",
+                table => new
                 {
                     Id = table.Column<string>(nullable: false),
                     RemovedEntityId = table.Column<string>(nullable: true),
                     RemovedByUserId = table.Column<string>(nullable: true),
                     Date = table.Column<DateTime>(nullable: false)
                 },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_RemovedEntities", x => x.Id);
-                });
+                constraints: table => { table.PrimaryKey("PK_RemovedEntities", x => x.Id); });
 
             migrationBuilder.CreateTable(
-                name: "StaticContents",
-                columns: table => new
+                "StaticContents",
+                table => new
                 {
                     Id = table.Column<string>(nullable: false),
                     IsDisabled = table.Column<bool>(nullable: false),
@@ -51,14 +44,11 @@ namespace CMSCore.Content.Data.Migrations
                     Content = table.Column<string>(nullable: true),
                     IsContentMarkdown = table.Column<bool>(nullable: false)
                 },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_StaticContents", x => x.Id);
-                });
+                constraints: table => { table.PrimaryKey("PK_StaticContents", x => x.Id); });
 
             migrationBuilder.CreateTable(
-                name: "Tags",
-                columns: table => new
+                "Tags",
+                table => new
                 {
                     Id = table.Column<string>(nullable: false),
                     IsDisabled = table.Column<bool>(nullable: false),
@@ -68,14 +58,11 @@ namespace CMSCore.Content.Data.Migrations
                     DisplayName = table.Column<string>(nullable: true),
                     NormalizedName = table.Column<string>(nullable: true)
                 },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Tags", x => x.Id);
-                });
+                constraints: table => { table.PrimaryKey("PK_Tags", x => x.Id); });
 
             migrationBuilder.CreateTable(
-                name: "Users",
-                columns: table => new
+                "Users",
+                table => new
                 {
                     Id = table.Column<string>(nullable: false),
                     IsDisabled = table.Column<bool>(nullable: false),
@@ -88,14 +75,11 @@ namespace CMSCore.Content.Data.Migrations
                     IdentityUserId = table.Column<string>(nullable: true),
                     Roles = table.Column<string>(nullable: true)
                 },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Users", x => x.Id);
-                });
+                constraints: table => { table.PrimaryKey("PK_Users", x => x.Id); });
 
             migrationBuilder.CreateTable(
-                name: "BlogPosts",
-                columns: table => new
+                "BlogPosts",
+                table => new
                 {
                     Id = table.Column<string>(nullable: false),
                     IsDisabled = table.Column<bool>(nullable: false),
@@ -112,22 +96,22 @@ namespace CMSCore.Content.Data.Migrations
                 {
                     table.PrimaryKey("PK_BlogPosts", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_BlogPosts_Blogs_BlogId",
-                        column: x => x.BlogId,
-                        principalTable: "Blogs",
-                        principalColumn: "Id",
+                        "FK_BlogPosts_Blogs_BlogId",
+                        x => x.BlogId,
+                        "Blogs",
+                        "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_BlogPosts_StaticContents_ContentId",
-                        column: x => x.ContentId,
-                        principalTable: "StaticContents",
-                        principalColumn: "Id",
+                        "FK_BlogPosts_StaticContents_ContentId",
+                        x => x.ContentId,
+                        "StaticContents",
+                        "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Pages",
-                columns: table => new
+                "Pages",
+                table => new
                 {
                     Id = table.Column<string>(nullable: false),
                     IsDisabled = table.Column<bool>(nullable: false),
@@ -145,46 +129,46 @@ namespace CMSCore.Content.Data.Migrations
                 {
                     table.PrimaryKey("PK_Pages", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Pages_Blogs_BlogId",
-                        column: x => x.BlogId,
-                        principalTable: "Blogs",
-                        principalColumn: "Id",
+                        "FK_Pages_Blogs_BlogId",
+                        x => x.BlogId,
+                        "Blogs",
+                        "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Pages_StaticContents_StaticContentId",
-                        column: x => x.StaticContentId,
-                        principalTable: "StaticContents",
-                        principalColumn: "Id",
+                        "FK_Pages_StaticContents_StaticContentId",
+                        x => x.StaticContentId,
+                        "StaticContents",
+                        "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "BlogPostTags",
-                columns: table => new
+                "BlogPostTags",
+                table => new
                 {
                     BlogPostId = table.Column<string>(nullable: false),
                     TagId = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_BlogPostTags", x => new { x.BlogPostId, x.TagId });
+                    table.PrimaryKey("PK_BlogPostTags", x => new {x.BlogPostId, x.TagId});
                     table.ForeignKey(
-                        name: "FK_BlogPostTags_BlogPosts_BlogPostId",
-                        column: x => x.BlogPostId,
-                        principalTable: "BlogPosts",
-                        principalColumn: "Id",
+                        "FK_BlogPostTags_BlogPosts_BlogPostId",
+                        x => x.BlogPostId,
+                        "BlogPosts",
+                        "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_BlogPostTags_Tags_TagId",
-                        column: x => x.TagId,
-                        principalTable: "Tags",
-                        principalColumn: "Id",
+                        "FK_BlogPostTags_Tags_TagId",
+                        x => x.TagId,
+                        "Tags",
+                        "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "EntityHistory",
-                columns: table => new
+                "EntityHistory",
+                table => new
                 {
                     Id = table.Column<string>(nullable: false),
                     EntityId = table.Column<string>(nullable: true),
@@ -201,133 +185,133 @@ namespace CMSCore.Content.Data.Migrations
                 {
                     table.PrimaryKey("PK_EntityHistory", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_EntityHistory_Blogs_BlogId",
-                        column: x => x.BlogId,
-                        principalTable: "Blogs",
-                        principalColumn: "Id",
+                        "FK_EntityHistory_Blogs_BlogId",
+                        x => x.BlogId,
+                        "Blogs",
+                        "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_EntityHistory_BlogPosts_BlogPostId",
-                        column: x => x.BlogPostId,
-                        principalTable: "BlogPosts",
-                        principalColumn: "Id",
+                        "FK_EntityHistory_BlogPosts_BlogPostId",
+                        x => x.BlogPostId,
+                        "BlogPosts",
+                        "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_EntityHistory_Pages_PageId",
-                        column: x => x.PageId,
-                        principalTable: "Pages",
-                        principalColumn: "Id",
+                        "FK_EntityHistory_Pages_PageId",
+                        x => x.PageId,
+                        "Pages",
+                        "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_EntityHistory_StaticContents_StaticContentId",
-                        column: x => x.StaticContentId,
-                        principalTable: "StaticContents",
-                        principalColumn: "Id",
+                        "FK_EntityHistory_StaticContents_StaticContentId",
+                        x => x.StaticContentId,
+                        "StaticContents",
+                        "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_EntityHistory_Tags_TagId",
-                        column: x => x.TagId,
-                        principalTable: "Tags",
-                        principalColumn: "Id",
+                        "FK_EntityHistory_Tags_TagId",
+                        x => x.TagId,
+                        "Tags",
+                        "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_EntityHistory_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
+                        "FK_EntityHistory_Users_UserId",
+                        x => x.UserId,
+                        "Users",
+                        "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_BlogPosts_BlogId",
-                table: "BlogPosts",
-                column: "BlogId");
+                "IX_BlogPosts_BlogId",
+                "BlogPosts",
+                "BlogId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_BlogPosts_ContentId",
-                table: "BlogPosts",
-                column: "ContentId");
+                "IX_BlogPosts_ContentId",
+                "BlogPosts",
+                "ContentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_BlogPostTags_TagId",
-                table: "BlogPostTags",
-                column: "TagId");
+                "IX_BlogPostTags_TagId",
+                "BlogPostTags",
+                "TagId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_EntityHistory_BlogId",
-                table: "EntityHistory",
-                column: "BlogId");
+                "IX_EntityHistory_BlogId",
+                "EntityHistory",
+                "BlogId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_EntityHistory_BlogPostId",
-                table: "EntityHistory",
-                column: "BlogPostId");
+                "IX_EntityHistory_BlogPostId",
+                "EntityHistory",
+                "BlogPostId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_EntityHistory_PageId",
-                table: "EntityHistory",
-                column: "PageId");
+                "IX_EntityHistory_PageId",
+                "EntityHistory",
+                "PageId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_EntityHistory_StaticContentId",
-                table: "EntityHistory",
-                column: "StaticContentId");
+                "IX_EntityHistory_StaticContentId",
+                "EntityHistory",
+                "StaticContentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_EntityHistory_TagId",
-                table: "EntityHistory",
-                column: "TagId");
+                "IX_EntityHistory_TagId",
+                "EntityHistory",
+                "TagId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_EntityHistory_UserId",
-                table: "EntityHistory",
-                column: "UserId");
+                "IX_EntityHistory_UserId",
+                "EntityHistory",
+                "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Pages_BlogId",
-                table: "Pages",
-                column: "BlogId");
+                "IX_Pages_BlogId",
+                "Pages",
+                "BlogId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Pages_StaticContentId",
-                table: "Pages",
-                column: "StaticContentId");
+                "IX_Pages_StaticContentId",
+                "Pages",
+                "StaticContentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Users_IdentityUserId",
-                table: "Users",
-                column: "IdentityUserId",
+                "IX_Users_IdentityUserId",
+                "Users",
+                "IdentityUserId",
                 unique: true);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "BlogPostTags");
+                "BlogPostTags");
 
             migrationBuilder.DropTable(
-                name: "EntityHistory");
+                "EntityHistory");
 
             migrationBuilder.DropTable(
-                name: "RemovedEntities");
+                "RemovedEntities");
 
             migrationBuilder.DropTable(
-                name: "BlogPosts");
+                "BlogPosts");
 
             migrationBuilder.DropTable(
-                name: "Pages");
+                "Pages");
 
             migrationBuilder.DropTable(
-                name: "Tags");
+                "Tags");
 
             migrationBuilder.DropTable(
-                name: "Users");
+                "Users");
 
             migrationBuilder.DropTable(
-                name: "Blogs");
+                "Blogs");
 
             migrationBuilder.DropTable(
-                name: "StaticContents");
+                "StaticContents");
         }
     }
 }

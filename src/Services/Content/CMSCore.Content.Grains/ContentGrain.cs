@@ -1,22 +1,142 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using CMSCore.Content.Data;
 using CMSCore.Content.GrainInterfaces;
 using CMSCore.Content.Models;
 using CMSCore.Content.Models.Shared;
-using CMSCore.Shared.Abstractions;
-using EFCore.Repository;
+using CMSCore.Shared.Abstractions.Extensions;
+using CMSCore.Shared.Abstractions.Types.Results;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Orleans;
 
 namespace CMSCore.Content.Grains
 {
     public class ContentGrain : Grain, IContentGrain
     {
-        private readonly IRepository _repository;
+        private readonly ContentDbContext _context;
+        private readonly ILogger<AccountGrain> _logger;
 
-        public ContentGrain(IRepository repository)
+        public ContentGrain(ContentDbContext context, ILogger<AccountGrain> logger = null)
         {
-            _repository = repository;
+            _context = context;
+            _logger = logger ?? ServiceProvider.GetService<ILogger<AccountGrain>>();
+            _context.Pages.Include(x => x.EntityHistory).Include(x => x.StaticContent).ThenInclude(x => x.EntityHistory)
+                .Load();
+            _context.Blogs.Include(x => x.EntityHistory).Include(x => x.BlogPosts).ThenInclude(x => x.EntityHistory)
+                .Load();
         }
+
+        public async Task<IEnumerable<Page>> Pages()
+        {
+            try
+            {
+                return await _context.Set<Page>().ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex);
+                return null;
+            }
+        }
+
+        public async Task<IEnumerable<Blog>> Blogs()
+        {
+            try
+            {
+                return await _context.Set<Blog>().ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex);
+                return null;
+            }
+        }
+
+        public async Task<IEnumerable<BlogPost>> BlogPosts()
+        {
+            try
+            {
+                return await _context.Set<BlogPost>().ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex);
+                return null;
+            }
+        }
+
+        public async Task<IEnumerable<BlogPost>> BlogPosts(string blogId)
+        {
+            try
+            {
+                return await _context.Set<BlogPost>().Where(x => x.BlogId == blogId).ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex);
+                return null;
+            }
+        }
+
+        public async Task<BlogPost> BlogPostDetails(string blogPostId)
+        {
+            try
+            {
+                return await _context.Set<BlogPost>().FirstOrDefaultAsync(x => x.Id == blogPostId);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex);
+                return null;
+            }
+        }
+
+        public async Task<Page> PageById(string id)
+        {
+            try
+            {
+                return await _context.Set<Page>()
+                    .Include(x => x.Blog)
+                    .ThenInclude(x => x.BlogPosts)
+                    .FirstOrDefaultAsync(x => x.Id == id);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex);
+                return null;
+            }
+        }
+
+        public async Task<IEnumerable<RemovedEntity>> RemovedEntities()
+        {
+            try
+            {
+                return await _context.Set<RemovedEntity>().ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex);
+                return null;
+            }
+        }
+
+        public async Task<IEnumerable<EntityHistory>> EntityHistory()
+        {
+            try
+            {
+                return await _context.Set<EntityHistory>().ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex);
+                return null;
+            }
+        }
+
 
         #region Create
 
@@ -24,12 +144,13 @@ namespace CMSCore.Content.Grains
         {
             try
             {
-                _repository.Add(model.Entity);
-                await _repository.SaveChangesAsync();
+                _context.Add(model.Entity);
+                await _context.SaveChangesAsync();
                 return OperationResult.Success;
             }
             catch (Exception ex)
             {
+                _logger?.LogError(ex);
                 return OperationResult.Failed(ex.Message);
             }
         }
@@ -38,12 +159,13 @@ namespace CMSCore.Content.Grains
         {
             try
             {
-                _repository.Add(model.Entity);
-                await _repository.SaveChangesAsync();
+                _context.Add(model.Entity);
+                await _context.SaveChangesAsync();
                 return OperationResult.Success;
             }
             catch (Exception ex)
             {
+                _logger?.LogError(ex);
                 return OperationResult.Failed(ex.Message);
             }
         }
@@ -56,22 +178,25 @@ namespace CMSCore.Content.Grains
         {
             try
             {
-                var entityToUpdate = _repository.Find<Page>(x => x.Id == model.Entity.Id);
+                var entityToUpdate = await _context.FindAsync<Page>(model.EntityId);
                 if (entityToUpdate == null)
-                    throw new Exception($"{model?.Entity?.GetType()?.Name ?? "Entity"} to update was not found.");
+                    throw new Exception($"{model.Entity?.GetType()?.Name ?? "Entity"} to update was not found.");
 
                 entityToUpdate.Description = model.Entity.Description;
                 entityToUpdate.Title = model.Entity.Title;
+                entityToUpdate.StaticContent = model.Entity?.StaticContent;
 
-                _repository.Update(entityToUpdate);
+                entityToUpdate.EntityHistory.Add(new EntityHistory(model.EntityId, model.UserId, OperationType.Update));
 
-                await _repository.SaveChangesAsync();
-                await _repository.AggregateEntityHistory(entityToUpdate.Id, model.UserId, OperationType.Update);
+                _context.Update(entityToUpdate);
+
+                await _context.SaveChangesAsync();
 
                 return OperationResult.Success;
             }
             catch (Exception ex)
             {
+                _logger?.LogError(ex);
                 return OperationResult.Failed(ex.Message);
             }
         }
@@ -80,22 +205,24 @@ namespace CMSCore.Content.Grains
         {
             try
             {
-                var entityToUpdate = _repository.Find<Blog>(x => x.Id == model.Entity.Id);
+                var entityToUpdate = await _context.FindAsync<Blog>(model.EntityId);
                 if (entityToUpdate == null)
-                    throw new Exception($"{model?.Entity?.GetType()?.Name ?? "Entity"} to update was not found.");
+                    throw new Exception($"{model.Entity?.GetType()?.Name ?? "Entity"} to update was not found.");
 
                 entityToUpdate.Description = model.Entity.Description;
                 entityToUpdate.Title = model.Entity.Title;
+                entityToUpdate.EntityHistory.Add(new EntityHistory(model.Entity.Id, model.UserId,
+                    OperationType.Update));
 
-                _repository.Update(entityToUpdate);
+                _context.Update(entityToUpdate);
 
-                await _repository.SaveChangesAsync();
-                await _repository.AggregateEntityHistory(entityToUpdate.Id, model.UserId, OperationType.Update);
+                await _context.SaveChangesAsync();
 
                 return OperationResult.Success;
             }
             catch (Exception ex)
             {
+                _logger?.LogError(ex);
                 return OperationResult.Failed(ex.Message);
             }
         }
@@ -104,23 +231,25 @@ namespace CMSCore.Content.Grains
         {
             try
             {
-                var entityToUpdate = _repository.Find<BlogPost>(x => x.Id == model.Entity.Id);
+                var entityToUpdate = await _context.FindAsync<BlogPost>(model.EntityId);
                 if (entityToUpdate == null)
-                    throw new Exception($"{model?.Entity?.GetType()?.Name ?? "Entity"} to update was not found.");
+                    throw new Exception($"{model.Entity?.GetType()?.Name ?? "Entity"} to update was not found.");
 
                 entityToUpdate.Description = model.Entity.Description;
                 entityToUpdate.Title = model.Entity.Title;
                 entityToUpdate.Content.Content = model.Entity.Content.Content;
+                entityToUpdate.EntityHistory.Add(new EntityHistory(model.Entity.Id, model.UserId,
+                    OperationType.Update));
 
-                _repository.Update(entityToUpdate);
+                _context.Update(entityToUpdate);
 
-                await _repository.SaveChangesAsync();
-                await _repository.AggregateEntityHistory(entityToUpdate.Id, model.UserId, OperationType.Update);
+                await _context.SaveChangesAsync();
 
                 return OperationResult.Success;
             }
             catch (Exception ex)
             {
+                _logger?.LogError(ex);
                 return OperationResult.Failed(ex.Message);
             }
         }
@@ -129,22 +258,24 @@ namespace CMSCore.Content.Grains
         {
             try
             {
-                var entityToUpdate = _repository.Find<StaticContent>(x => x.Id == model.Entity.Id);
+                var entityToUpdate = await _context.FindAsync<StaticContent>(model.EntityId);
                 if (entityToUpdate == null)
-                    throw new Exception($"{model?.Entity?.GetType()?.Name ?? "Entity"} to update was not found.");
+                    throw new Exception($"{model.Entity?.GetType()?.Name ?? "Entity"} to update was not found.");
 
                 entityToUpdate.Content = model.Entity.Content;
                 entityToUpdate.IsContentMarkdown = model.Entity.IsContentMarkdown;
+                entityToUpdate.EntityHistory.Add(new EntityHistory(model.Entity.Id, model.UserId,
+                    OperationType.Update));
 
-                _repository.Update(entityToUpdate);
+                _context.Update(entityToUpdate);
 
-                await _repository.SaveChangesAsync();
-                await _repository.AggregateEntityHistory(entityToUpdate.Id, model.UserId, OperationType.Update);
+                await _context.SaveChangesAsync();
 
                 return OperationResult.Success;
             }
             catch (Exception ex)
             {
+                _logger?.LogError(ex);
                 return OperationResult.Failed(ex.Message);
             }
         }
@@ -157,10 +288,9 @@ namespace CMSCore.Content.Grains
         {
             try
             {
-                var entityToMarkAsDeleted = _repository.Find<Page>(page => page.Id == model.EntityId);
+                var entityToMarkAsDeleted = await _context.FindAsync<Page>(model.EntityId);
 
                 entityToMarkAsDeleted.IsRemoved = true;
-
 
                 if (entityToMarkAsDeleted.PageContentType == PageContentType.Blog)
                 {
@@ -176,18 +306,18 @@ namespace CMSCore.Content.Grains
                     entityToMarkAsDeleted.StaticContent.IsRemoved = true;
                 }
 
-                _repository.Update(entityToMarkAsDeleted);
+                _context.Update(entityToMarkAsDeleted);
 
                 var removedEntity = new RemovedEntity(entityToMarkAsDeleted.Id, model.UserId);
-                _repository.Add(removedEntity);
+                _context.Add(removedEntity);
 
-                await _repository.SaveChangesAsync();
-                await _repository.AggregateEntityHistory(entityToMarkAsDeleted.Id, model.UserId, OperationType.Delete);
+                await _context.SaveChangesAsync();
 
                 return OperationResult.Success;
             }
             catch (Exception ex)
             {
+                _logger?.LogError(ex);
                 return OperationResult.Failed(ex.Message);
             }
         }
@@ -196,28 +326,28 @@ namespace CMSCore.Content.Grains
         {
             try
             {
-                var entityToMarkAsDeleted = _repository.Find<Blog>(page => page.Id == model.EntityId);
+                var entityToMarkAsDeleted = await _context.FindAsync<Blog>(model.EntityId);
 
                 entityToMarkAsDeleted.IsRemoved = true;
 
-                foreach (var entity in entityToMarkAsDeleted?.BlogPosts)
+                foreach (var entity in entityToMarkAsDeleted.BlogPosts)
                 {
                     entity.IsRemoved = true;
                     entity.Content.IsRemoved = true;
                 }
 
-                _repository.Update(entityToMarkAsDeleted);
+                _context.Update(entityToMarkAsDeleted);
 
                 var removedEntity = new RemovedEntity(entityToMarkAsDeleted.Id, model.UserId);
-                _repository.Add(removedEntity);
+                _context.Add(removedEntity);
 
-                await _repository.SaveChangesAsync();
-                await _repository.AggregateEntityHistory(entityToMarkAsDeleted.Id, model.UserId, OperationType.Delete);
+                await _context.SaveChangesAsync();
 
                 return OperationResult.Success;
             }
             catch (Exception ex)
             {
+                _logger?.LogError(ex);
                 return OperationResult.Failed(ex.Message);
             }
         }
@@ -226,23 +356,11 @@ namespace CMSCore.Content.Grains
         {
             try
             {
-                var entityToMarkAsDeleted = _repository.Find<BlogPost>(page => page.Id == model.EntityId);
-
-                entityToMarkAsDeleted.IsRemoved = true;
-                entityToMarkAsDeleted.Content.IsRemoved = true;
-
-                _repository.Update(entityToMarkAsDeleted);
-
-                var removedEntity = new RemovedEntity(entityToMarkAsDeleted.Id, model.UserId);
-                _repository.Add(removedEntity);
-
-                await _repository.SaveChangesAsync();
-                await _repository.AggregateEntityHistory(entityToMarkAsDeleted.Id, model.UserId, OperationType.Delete);
-
-                return OperationResult.Success;
+                return await _context.DeleteEntity<BlogPost>(model.EntityId, model.UserId);
             }
             catch (Exception ex)
             {
+                _logger?.LogError(ex);
                 return OperationResult.Failed(ex.Message);
             }
         }
@@ -251,36 +369,14 @@ namespace CMSCore.Content.Grains
         {
             try
             {
-                var entityToMarkAsDeleted = _repository.Find<StaticContent>(page => page.Id == model.EntityId);
-
-                entityToMarkAsDeleted.IsRemoved = true;
-
-                _repository.Update(entityToMarkAsDeleted);
-
-                var removedEntity = new RemovedEntity(entityToMarkAsDeleted.Id, model.UserId);
-                _repository.Add(removedEntity);
-
-                await _repository.SaveChangesAsync();
-                await _repository.AggregateEntityHistory(entityToMarkAsDeleted.Id, model.UserId, OperationType.Delete);
-
-                return OperationResult.Success;
+                return await _context.DeleteEntity<StaticContent>(model.EntityId, model.UserId);
             }
             catch (Exception ex)
             {
+                _logger?.LogError(ex);
                 return OperationResult.Failed(ex.Message);
             }
         }
-
-        #endregion
-
-        #region Private helpers
-
-        //private async Task AggregateEntityHistory(string entityId, string userId, OperationType operationType)
-        //{
-        //    var entityHistory = new EntityHistory(entityId, userId, operationType);
-        //    _repository.Add(entityHistory);
-        //    await _repository.SaveChangesAsync();
-        //}
 
         #endregion
     }
