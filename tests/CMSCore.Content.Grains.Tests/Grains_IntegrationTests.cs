@@ -97,7 +97,7 @@ namespace CMSCore.Content.Grains.Tests
             Assert.True(containsUpdate);
 
             var removedHistory = _context.RemovedEntities;
-            var entityIsInRemovedTable = removedHistory.Any(x => x.RemovedEntityId == test4UserId);
+            var entityIsInRemovedTable = removedHistory.Any(x => x.EntityId == test4UserId);
 
             Assert.True(entityIsInRemovedTable);
         }

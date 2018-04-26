@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using CMSCore.Content.Api.Models.Content;
 using CMSCore.Content.GrainInterfaces;
@@ -27,7 +28,7 @@ namespace CMSCore.Content.Api.Controllers
             try
             {
                 var result = await _contentGrain.Pages();
-                return Ok(result);
+                return Ok(result.Select(x => x.ViewModel()));
             }
             catch (Exception ex)
             {
@@ -49,37 +50,37 @@ namespace CMSCore.Content.Api.Controllers
             }
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreatePageViewModel model)
-        {
-            try
-            {
-                var operation = new CreateOperation<Page>(CurrentUserHelper.UserId, model.ToModel());
-                var result = await _contentGrain.Create(operation);
+        //[HttpPost]
+        //public async Task<IActionResult> Create([FromBody] CreatePageViewModel model)
+        //{
+        //    try
+        //    {
+        //        var operation = new CreateOperation<Page>(CurrentUserHelper.UserId, model.ToModel());
+        //        var result = await _contentGrain.Create(operation);
 
-                return result.Succeeded ? (IActionResult) Ok() : BadRequest(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex);
-            }
-        }
+        //        return result.Succeeded ? (IActionResult) Ok() : BadRequest(result);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ex);
+        //    }
+        //}
 
-        [HttpPut]
-        public async Task<IActionResult> Update([FromBody] UpdatePageViewModel model)
-        {
-            try
-            {
-                var operation = new UpdateOperation<Page>(CurrentUserHelper.UserId, model.Id, model.ToModel());
-                var result = await _contentGrain.Update(operation);
+        //[HttpPut]
+        //public async Task<IActionResult> Update([FromBody] UpdatePageViewModel model)
+        //{
+        //    try
+        //    {
+        //        var operation = new UpdateOperation<Page>(CurrentUserHelper.UserId, model.Id, model.ToModel());
+        //        var result = await _contentGrain.Update(operation);
 
-                return result.Succeeded ? (IActionResult) Ok() : BadRequest(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex);
-            }
-        }
+        //        return result.Succeeded ? (IActionResult) Ok() : BadRequest(result);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ex);
+        //    }
+        //}
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)

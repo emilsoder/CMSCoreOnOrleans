@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using CMSCore.Content.Api.Models.Content;
 using CMSCore.Content.GrainInterfaces;
@@ -10,24 +12,24 @@ using Orleans;
 namespace CMSCore.Content.Api.Controllers
 {
     [Route("api/[controller]")]
-    public class BlogController : Controller
+    public class FeedController : Controller
     {
         private readonly IClusterClient client;
 
-        public BlogController(IClusterClient client)
+        public FeedController(IClusterClient client)
         {
             this.client = client;
         }
 
         private IContentGrain _contentGrain => client.GetGrain<IContentGrain>(Guid.NewGuid());
 
+
         [HttpGet]
         public async Task<IActionResult> List()
         {
             try
             {
-                var result = await _contentGrain.Blogs();
-                return Ok(result);
+                return Ok((await _contentGrain.Feeds())?.Select(x => x.ViewModel()));
             }
             catch (Exception ex)
             {
@@ -36,12 +38,12 @@ namespace CMSCore.Content.Api.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update([FromBody] UpdateBlogViewModel model)
+        public async Task<IActionResult> Update([FromBody] UpdateFeedViewModel model)
         {
             try
             {
-                var operation = new UpdateOperation<Blog>(CurrentUserHelper.UserId, model.Id, model.ToModel());
-                var result = await _contentGrain.Update(operation);
+                var result = await _contentGrain.Update(new UpdateOperation<Feed>(CurrentUserHelper.UserId, model.Id,
+                    model.UpdateFeed()));
 
                 return result.Succeeded ? (IActionResult) Ok() : BadRequest(result);
             }
@@ -56,7 +58,7 @@ namespace CMSCore.Content.Api.Controllers
         {
             try
             {
-                var operation = new DeleteOperation<Blog>(CurrentUserHelper.UserId, id);
+                var operation = new DeleteOperation<Feed>(CurrentUserHelper.UserId, id);
                 var result = await _contentGrain.Delete(operation);
 
                 return result.Succeeded ? (IActionResult) Ok() : BadRequest(result);

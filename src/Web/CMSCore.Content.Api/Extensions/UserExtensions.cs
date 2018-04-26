@@ -6,7 +6,7 @@ using CMSCore.Content.Models;
 
 namespace CMSCore.Content.Api.Extensions
 {
-    public static class ViewModelExtensions
+    public static class UserExtensions
     {
         public static UserViewModel ViewModel(this User user)
         {

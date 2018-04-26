@@ -8,7 +8,8 @@ namespace CMSCore.Content.Api.Models.Content
         public string Title { get; set; }
         public string Description { get; set; }
 
-        public StaticContentViewModel Content { get; set; }
+        public string Content { get; set; }
+        public bool IsContentMarkdown { get; set; } = true;
 
         public IList<string> Tags { get; set; }
     }

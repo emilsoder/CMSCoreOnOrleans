@@ -6,17 +6,17 @@ namespace CMSCore.Content.Models
     {
         public RemovedEntity() => Id = Guid.NewGuid().ToString();
 
-        public RemovedEntity(string entityId, string removedByUserId) : this()
+        public RemovedEntity(string entityId, string userId) : this()
         {
-            RemovedEntityId = entityId;
-            RemovedByUserId = removedByUserId;
+            EntityId = entityId;
+            UserId = userId;
         }
 
         public string Id { get; set; }
 
-        public string RemovedEntityId { get; set; }
+        public string EntityId { get; set; }
 
-        public string RemovedByUserId { get; set; }
+        public string UserId { get; set; }
         public DateTime Date { get; set; } = DateTime.Now;
     }
 }

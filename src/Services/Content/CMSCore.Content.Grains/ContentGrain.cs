@@ -18,17 +18,22 @@ namespace CMSCore.Content.Grains
     public class ContentGrain : Grain, IContentGrain
     {
         private readonly ContentDbContext _context;
-        private readonly ILogger<AccountGrain> _logger;
+        private readonly ILogger<ContentGrain> _logger;
 
-        public ContentGrain(ContentDbContext context, ILogger<AccountGrain> logger = null)
+        public ContentGrain(ContentDbContext context, ILogger<ContentGrain> logger = null)
         {
             _context = context;
-            _logger = logger ?? ServiceProvider.GetService<ILogger<AccountGrain>>();
-            _context.Pages.Include(x => x.EntityHistory).Include(x => x.StaticContent).ThenInclude(x => x.EntityHistory)
-                .Load();
-            _context.Blogs.Include(x => x.EntityHistory).Include(x => x.BlogPosts).ThenInclude(x => x.EntityHistory)
+            _logger = logger ?? ServiceProvider.GetService<ILogger<ContentGrain>>();
+
+            _context.Pages
+                .Include(x => x.StaticContent)
+                .Include(x => x.Feed)
+                .ThenInclude(x => x.FeedItems)
+                .Include(x => x.EntityHistory)
                 .Load();
         }
+
+        #region Read
 
         public async Task<IEnumerable<Page>> Pages()
         {
@@ -43,65 +48,13 @@ namespace CMSCore.Content.Grains
             }
         }
 
-        public async Task<IEnumerable<Blog>> Blogs()
-        {
-            try
-            {
-                return await _context.Set<Blog>().ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex);
-                return null;
-            }
-        }
-
-        public async Task<IEnumerable<BlogPost>> BlogPosts()
-        {
-            try
-            {
-                return await _context.Set<BlogPost>().ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex);
-                return null;
-            }
-        }
-
-        public async Task<IEnumerable<BlogPost>> BlogPosts(string blogId)
-        {
-            try
-            {
-                return await _context.Set<BlogPost>().Where(x => x.BlogId == blogId).ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex);
-                return null;
-            }
-        }
-
-        public async Task<BlogPost> BlogPostDetails(string blogPostId)
-        {
-            try
-            {
-                return await _context.Set<BlogPost>().FirstOrDefaultAsync(x => x.Id == blogPostId);
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex);
-                return null;
-            }
-        }
-
         public async Task<Page> PageById(string id)
         {
             try
             {
                 return await _context.Set<Page>()
-                    .Include(x => x.Blog)
-                    .ThenInclude(x => x.BlogPosts)
+                    .Include(x => x.Feed)
+                    .ThenInclude(x => x.FeedItems)
                     .FirstOrDefaultAsync(x => x.Id == id);
             }
             catch (Exception ex)
@@ -111,11 +64,81 @@ namespace CMSCore.Content.Grains
             }
         }
 
-        public async Task<IEnumerable<RemovedEntity>> RemovedEntities()
+        public async Task<Page> PageByName(string name)
         {
             try
             {
-                return await _context.Set<RemovedEntity>().ToListAsync();
+                return await _context.Set<Page>()
+                    .Include(x => x.StaticContent)
+                    .Include(x => x.Feed)
+                    .ThenInclude(x => x.FeedItems)
+                    .FirstOrDefaultAsync(x => x.NormalizedName == name);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex);
+                return null;
+            }
+        }
+
+        public async Task<IEnumerable<Feed>> Feeds()
+        {
+            try
+            {
+                return await _context.Set<Feed>().ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex);
+                return null;
+            }
+        }
+
+        public async Task<IEnumerable<FeedItem>> FeedItems()
+        {
+            try
+            {
+                return await _context.Set<FeedItem>().ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex);
+                return null;
+            }
+        }
+
+        public async Task<IEnumerable<FeedItem>> FeedItems(string feedId)
+        {
+            try
+            {
+                return await _context.Set<FeedItem>().Where(x => x.FeedId == feedId).ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex);
+                return null;
+            }
+        }
+
+        public async Task<FeedItem> FeedItemDetails(string feedItemId)
+        {
+            try
+            {
+                return await _context.Set<FeedItem>().FirstOrDefaultAsync(x => x.Id == feedItemId);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex);
+                return null;
+            }
+        }
+
+
+        public async Task<IEnumerable<EntityHistory>> EntityHistory(string entityId)
+        {
+            try
+            {
+                return await _context.Set<EntityHistory>().Where(x => x.EntityId == entityId).ToListAsync();
             }
             catch (Exception ex)
             {
@@ -137,30 +160,31 @@ namespace CMSCore.Content.Grains
             }
         }
 
+        #endregion
 
         #region Create
 
         public async Task<IOperationResult> Create(CreateOperation<Page> model)
         {
-            try
-            {
-                _context.Add(model.Entity);
-                await _context.SaveChangesAsync();
-                return OperationResult.Success;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex);
-                return OperationResult.Failed(ex.Message);
-            }
+            return await CreateEntity(model.Entity, model.UserId);
         }
 
-        public async Task<IOperationResult> Create(CreateOperation<BlogPost> model)
+        public async Task<IOperationResult> Create(CreateOperation<FeedItem> model)
+        {
+            return await CreateEntity(model.Entity, model.UserId);
+        }
+
+        private async Task<IOperationResult> CreateEntity<T>(T entity, string userId) where T : EntityBase
         {
             try
             {
-                _context.Add(model.Entity);
+                entity.EntityHistory.Add(new EntityHistory(entity.Id, userId,
+                    OperationType.Create));
+
+                _context.Add(entity);
+
                 await _context.SaveChangesAsync();
+
                 return OperationResult.Success;
             }
             catch (Exception ex)
@@ -178,21 +202,26 @@ namespace CMSCore.Content.Grains
         {
             try
             {
-                var entityToUpdate = await _context.FindAsync<Page>(model.EntityId);
+                var set = _context.Set<Page>()?
+                    .Include(x => x.EntityHistory)
+                    .Include(x => x.StaticContent);
+                var entityToUpdate = await (set ?? throw new Exception("No entities found in set."))
+                    .FirstOrDefaultAsync(x => x.Id == model.EntityId);
+
+
                 if (entityToUpdate == null)
                     throw new Exception($"{model.Entity?.GetType()?.Name ?? "Entity"} to update was not found.");
 
-                entityToUpdate.Description = model.Entity.Description;
-                entityToUpdate.Title = model.Entity.Title;
-                entityToUpdate.StaticContent = model.Entity?.StaticContent;
+                entityToUpdate.Name = model.Entity.Name;
+                if (entityToUpdate.StaticContent?.Content == null)
+                {
+                    entityToUpdate.StaticContent = new StaticContent();
+                }
 
-                entityToUpdate.EntityHistory.Add(new EntityHistory(model.EntityId, model.UserId, OperationType.Update));
+                entityToUpdate.StaticContent.Content = model.Entity.StaticContent.Content;
+                entityToUpdate.StaticContent.IsContentMarkdown = model.Entity.StaticContent.IsContentMarkdown;
 
-                _context.Update(entityToUpdate);
-
-                await _context.SaveChangesAsync();
-
-                return OperationResult.Success;
+                return await UpdateEntity(entityToUpdate, model.UserId);
             }
             catch (Exception ex)
             {
@@ -201,24 +230,21 @@ namespace CMSCore.Content.Grains
             }
         }
 
-        public async Task<IOperationResult> Update(UpdateOperation<Blog> model)
+        public async Task<IOperationResult> Update(UpdateOperation<Feed> model)
         {
             try
             {
-                var entityToUpdate = await _context.FindAsync<Blog>(model.EntityId);
+                var set = _context.Set<Feed>()?
+                    .Include(x => x.EntityHistory);
+
+                var entityToUpdate = await (set ?? throw new Exception("No entities found in set."))
+                    .FirstOrDefaultAsync(x => x.Id == model.EntityId);
+
                 if (entityToUpdate == null)
                     throw new Exception($"{model.Entity?.GetType()?.Name ?? "Entity"} to update was not found.");
 
-                entityToUpdate.Description = model.Entity.Description;
-                entityToUpdate.Title = model.Entity.Title;
-                entityToUpdate.EntityHistory.Add(new EntityHistory(model.Entity.Id, model.UserId,
-                    OperationType.Update));
-
-                _context.Update(entityToUpdate);
-
-                await _context.SaveChangesAsync();
-
-                return OperationResult.Success;
+                entityToUpdate.Name = model.Entity.Name;
+                return await UpdateEntity(entityToUpdate, model.UserId);
             }
             catch (Exception ex)
             {
@@ -227,25 +253,27 @@ namespace CMSCore.Content.Grains
             }
         }
 
-        public async Task<IOperationResult> Update(UpdateOperation<BlogPost> model)
+        public async Task<IOperationResult> Update(UpdateOperation<FeedItem> model)
         {
             try
             {
-                var entityToUpdate = await _context.FindAsync<BlogPost>(model.EntityId);
+                var set = _context.Set<FeedItem>()?
+                    .Include(x => x.EntityHistory);
+
+                var entityToUpdate = await (set ?? throw new Exception("No entities found in set."))
+                    .FirstOrDefaultAsync(x => x.Id == model.EntityId);
+
                 if (entityToUpdate == null)
-                    throw new Exception($"{model.Entity?.GetType()?.Name ?? "Entity"} to update was not found.");
+                    throw new Exception("Entity to update was not found.");
 
                 entityToUpdate.Description = model.Entity.Description;
                 entityToUpdate.Title = model.Entity.Title;
-                entityToUpdate.Content.Content = model.Entity.Content.Content;
-                entityToUpdate.EntityHistory.Add(new EntityHistory(model.Entity.Id, model.UserId,
-                    OperationType.Update));
+                entityToUpdate.StaticContent.Content = model.Entity.StaticContent.Content;
+                entityToUpdate.StaticContent.IsContentMarkdown = model.Entity.StaticContent.IsContentMarkdown;
+                entityToUpdate.Tags = model.Entity.Tags;
+                entityToUpdate.CommentsEnabled = model.Entity.CommentsEnabled;
 
-                _context.Update(entityToUpdate);
-
-                await _context.SaveChangesAsync();
-
-                return OperationResult.Success;
+                return await UpdateEntity(entityToUpdate, model.UserId);
             }
             catch (Exception ex)
             {
@@ -254,62 +282,50 @@ namespace CMSCore.Content.Grains
             }
         }
 
-        public async Task<IOperationResult> Update(UpdateOperation<StaticContent> model)
+        private async Task<IOperationResult> UpdateEntity<T>(T entity, string userId) where T : EntityBase
         {
-            try
-            {
-                var entityToUpdate = await _context.FindAsync<StaticContent>(model.EntityId);
-                if (entityToUpdate == null)
-                    throw new Exception($"{model.Entity?.GetType()?.Name ?? "Entity"} to update was not found.");
+            entity.EntityHistory.Add(new EntityHistory(entity.Id, userId,
+                OperationType.Update));
 
-                entityToUpdate.Content = model.Entity.Content;
-                entityToUpdate.IsContentMarkdown = model.Entity.IsContentMarkdown;
-                entityToUpdate.EntityHistory.Add(new EntityHistory(model.Entity.Id, model.UserId,
-                    OperationType.Update));
+            _context.Update(entity);
 
-                _context.Update(entityToUpdate);
+            await _context.SaveChangesAsync();
 
-                await _context.SaveChangesAsync();
-
-                return OperationResult.Success;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex);
-                return OperationResult.Failed(ex.Message);
-            }
+            return OperationResult.Success;
         }
-
         #endregion
 
         #region Delete
 
-        public async Task<IOperationResult> Delete(DeleteOperation<Page> model)
+        public async Task<IOperationResult> Delete(DeleteOperation<Page> operation)
+        {
+            return await DeleteEntity(operation);
+        }
+
+        public async Task<IOperationResult> Delete(DeleteOperation<Feed> operation)
+        {
+            return await DeleteEntity(operation);
+        }
+
+        public async Task<IOperationResult> Delete(DeleteOperation<FeedItem> operation)
+        {
+            return await DeleteEntity(operation);
+        }
+
+        public async Task<IOperationResult> DeleteEntity<T>(DeleteOperation<T> operation) where T : EntityBase
         {
             try
             {
-                var entityToMarkAsDeleted = await _context.FindAsync<Page>(model.EntityId);
+                var set = _context.Set<T>()?.Include(x => x.EntityHistory);
+                var entity =
+                    await (set ?? throw new Exception("No entities found in set."))
+                        .FirstOrDefaultAsync(x => x.Id == operation.EntityId);
+                if (entity == null)
+                    throw new Exception("Entity to perform delete operation could not be loaded.");
 
-                entityToMarkAsDeleted.IsRemoved = true;
-
-                if (entityToMarkAsDeleted.PageContentType == PageContentType.Blog)
-                {
-                    entityToMarkAsDeleted.Blog.IsRemoved = true;
-                    foreach (var entity in entityToMarkAsDeleted.Blog?.BlogPosts)
-                    {
-                        entity.IsRemoved = true;
-                        entity.Content.IsRemoved = true;
-                    }
-                }
-                else
-                {
-                    entityToMarkAsDeleted.StaticContent.IsRemoved = true;
-                }
-
-                _context.Update(entityToMarkAsDeleted);
-
-                var removedEntity = new RemovedEntity(entityToMarkAsDeleted.Id, model.UserId);
-                _context.Add(removedEntity);
+                entity.IsRemoved = true;
+                entity.EntityHistory.Add(new EntityHistory(entity.Id, operation.UserId, OperationType.Delete));
+                _context.Update(entity);
 
                 await _context.SaveChangesAsync();
 
@@ -321,63 +337,7 @@ namespace CMSCore.Content.Grains
                 return OperationResult.Failed(ex.Message);
             }
         }
-
-        public async Task<IOperationResult> Delete(DeleteOperation<Blog> model)
-        {
-            try
-            {
-                var entityToMarkAsDeleted = await _context.FindAsync<Blog>(model.EntityId);
-
-                entityToMarkAsDeleted.IsRemoved = true;
-
-                foreach (var entity in entityToMarkAsDeleted.BlogPosts)
-                {
-                    entity.IsRemoved = true;
-                    entity.Content.IsRemoved = true;
-                }
-
-                _context.Update(entityToMarkAsDeleted);
-
-                var removedEntity = new RemovedEntity(entityToMarkAsDeleted.Id, model.UserId);
-                _context.Add(removedEntity);
-
-                await _context.SaveChangesAsync();
-
-                return OperationResult.Success;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex);
-                return OperationResult.Failed(ex.Message);
-            }
-        }
-
-        public async Task<IOperationResult> Delete(DeleteOperation<BlogPost> model)
-        {
-            try
-            {
-                return await _context.DeleteEntity<BlogPost>(model.EntityId, model.UserId);
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex);
-                return OperationResult.Failed(ex.Message);
-            }
-        }
-
-        public async Task<IOperationResult> Delete(DeleteOperation<StaticContent> model)
-        {
-            try
-            {
-                return await _context.DeleteEntity<StaticContent>(model.EntityId, model.UserId);
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex);
-                return OperationResult.Failed(ex.Message);
-            }
-        }
-
         #endregion
+
     }
 }

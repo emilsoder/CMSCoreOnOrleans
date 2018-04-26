@@ -13,14 +13,15 @@ namespace CMSCore.Content.GrainInterfaces
 
         Task<IEnumerable<Page>> Pages();
         Task<Page> PageById(string id);
+        Task<Page> PageByName(string title);
 
-        Task<IEnumerable<Blog>> Blogs();
+        Task<IEnumerable<Feed>> Feeds();
 
-        Task<IEnumerable<BlogPost>> BlogPosts();
-        Task<IEnumerable<BlogPost>> BlogPosts(string blogId);
-        Task<BlogPost> BlogPostDetails(string blogPostId);
+        Task<IEnumerable<FeedItem>> FeedItems();
+        Task<IEnumerable<FeedItem>> FeedItems(string feedId);
+        Task<FeedItem> FeedItemDetails(string feedItemId);
 
-        Task<IEnumerable<RemovedEntity>> RemovedEntities();
+        Task<IEnumerable<EntityHistory>> EntityHistory(string entityId);
         Task<IEnumerable<EntityHistory>> EntityHistory();
 
         #endregion
@@ -28,26 +29,26 @@ namespace CMSCore.Content.GrainInterfaces
 
         #region Create
 
-        Task<IOperationResult> Create(CreateOperation<Page> model);
-        Task<IOperationResult> Create(CreateOperation<BlogPost> model);
+        Task<IOperationResult> Create(CreateOperation<Page> operation);
+        Task<IOperationResult> Create(CreateOperation<FeedItem> operation);
 
         #endregion
 
         #region Update
 
-        Task<IOperationResult> Update(UpdateOperation<Page> model);
-        Task<IOperationResult> Update(UpdateOperation<Blog> model);
-        Task<IOperationResult> Update(UpdateOperation<BlogPost> model);
-        Task<IOperationResult> Update(UpdateOperation<StaticContent> model);
+        Task<IOperationResult> Update(UpdateOperation<Page> operation);
+        Task<IOperationResult> Update(UpdateOperation<Feed> operation);
+        Task<IOperationResult> Update(UpdateOperation<FeedItem> operation);
+        //Task<IOperationResult> Update(UpdateOperation<StaticContent> model);
 
         #endregion
 
         #region Delete
 
-        Task<IOperationResult> Delete(DeleteOperation<Page> model);
-        Task<IOperationResult> Delete(DeleteOperation<Blog> model);
-        Task<IOperationResult> Delete(DeleteOperation<BlogPost> model);
-        Task<IOperationResult> Delete(DeleteOperation<StaticContent> model);
+        Task<IOperationResult> Delete(DeleteOperation<Page> operation);
+        Task<IOperationResult> Delete(DeleteOperation<Feed> operation);
+        Task<IOperationResult> Delete(DeleteOperation<FeedItem> operation);
+        //Task<IOperationResult> Delete(DeleteOperation<StaticContent> model);
 
         #endregion
     }

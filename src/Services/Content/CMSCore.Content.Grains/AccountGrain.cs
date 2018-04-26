@@ -77,7 +77,7 @@ namespace CMSCore.Content.Grains
         {
             try
             {
-                return await _context.DeleteEntity<User>(model.EntityId, model.UserId);
+                return await DeleteEntity(model);
             }
             catch (Exception ex)
             {
@@ -110,6 +110,32 @@ namespace CMSCore.Content.Grains
             {
                 _logger?.LogError(ex);
                 return new List<User>();
+            }
+        }
+
+        public async Task<IOperationResult> DeleteEntity<T>(DeleteOperation<T> operation) where T : EntityBase
+        {
+            try
+            {
+                var set = _context.Set<T>()?.Include(x => x.EntityHistory);
+                var entity =
+                    await (set ?? throw new Exception("No entities found in set."))
+                        .FirstOrDefaultAsync(x => x.Id == operation.EntityId);
+                if (entity == null)
+                    throw new Exception("Entity to perform delete operation could not be loaded.");
+
+                entity.IsRemoved = true;
+                entity.EntityHistory.Add(new EntityHistory(entity.Id, operation.UserId, OperationType.Delete));
+                _context.Update(entity);
+
+                await _context.SaveChangesAsync();
+
+                return OperationResult.Success;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex);
+                return OperationResult.Failed(ex.Message);
             }
         }
     }

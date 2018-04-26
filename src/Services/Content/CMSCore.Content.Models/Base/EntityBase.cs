@@ -12,10 +12,10 @@ namespace CMSCore.Content.Models
         {
             Id = Guid.NewGuid().ToString();
             Created = DateTime.Now;
-            Modified = DateTime.Now;
         }
 
-        [Key] public virtual string Id { get; set; }
+        [Key] 
+        public virtual string Id { get; set; }
 
         public virtual bool IsDisabled { get; set; }
 
@@ -30,8 +30,8 @@ namespace CMSCore.Content.Models
         }
 
         public virtual DateTime Created { get; set; }
-        public virtual DateTime Modified { get; set; }
+        public virtual DateTime Modified { get; set; } = DateTime.Now;
 
-        public virtual List<EntityHistory> EntityHistory { get; set; }
+        public virtual ICollection<EntityHistory> EntityHistory { get; set; }
     }
 }
