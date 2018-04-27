@@ -13,6 +13,7 @@
 
   <ItemGroup>
      <ProjectReference Include="..\..\..\Core\CMSCore.Shared.Abstractions\CMSCore.Shared.Abstractions.csproj" />
+     <ProjectReference Include="..\..\..\Core\CMSCore.Shared.Types\CMSCore.Shared.Types.csproj" />
      <ProjectReference Include="..\CMSCore.Content.Models\CMSCore.Content.Models.csproj" />
   </ItemGroup>
 

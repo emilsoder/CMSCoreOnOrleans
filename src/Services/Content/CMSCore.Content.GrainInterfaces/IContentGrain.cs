@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using CMSCore.Content.Models;
 using CMSCore.Content.Models.Shared;
 using CMSCore.Shared.Abstractions.Types.Results;
+using CMSCore.Shared.Types.Content.EntityHistory;
+using CMSCore.Shared.Types.Content.Feed;
 using Orleans;
 
 namespace CMSCore.Content.GrainInterfaces
@@ -11,18 +13,18 @@ namespace CMSCore.Content.GrainInterfaces
     {
         #region READ
 
-        Task<IEnumerable<Page>> Pages();
+        Task<IEnumerable<Page>> PagesToList();
         Task<Page> PageById(string id);
         Task<Page> PageByName(string title);
 
-        Task<IEnumerable<Feed>> Feeds();
+        Task<IEnumerable<Feed>> FeedsToList();
 
-        Task<IEnumerable<FeedItem>> FeedItems();
-        Task<IEnumerable<FeedItem>> FeedItems(string feedId);
-        Task<FeedItem> FeedItemDetails(string feedItemId);
+        Task<IEnumerable<FeedItem>> FeedItemsToList();
+        Task<IEnumerable<FeedItem>> FeedItemsByFeedId(string feedId);
+        Task<FeedItem> FeedItemById(string feedItemId);
 
-        Task<IEnumerable<EntityHistory>> EntityHistory(string entityId);
-        Task<IEnumerable<EntityHistory>> EntityHistory();
+        Task<IEnumerable<EntityHistory>> EntityHistoryByEntityId(string entityId);
+        Task<IEnumerable<EntityHistory>> EntityHistoryToList();
 
         #endregion
 
@@ -52,4 +54,35 @@ namespace CMSCore.Content.GrainInterfaces
 
         #endregion
     }
+
+    public interface IContentManagerGrain : IGrainWithStringKey
+    {
+        Task<IOperationResult> Create(CreatePageViewModel model);
+        Task<IOperationResult> Create(CreateFeedItemViewModel model);
+
+        Task<IOperationResult> Update(UpdatePageViewModel model, string entityId);
+        Task<IOperationResult> Update(UpdateFeedViewModel model, string entityId);
+        Task<IOperationResult> Update(UpdateFeedItemViewModel model, string entityId);
+        
+        Task<IOperationResult> Delete(DeletePageViewModel model);
+        Task<IOperationResult> Delete(DeleteFeedViewModel model);
+        Task<IOperationResult> Delete(DeleteFeedItemViewModel model);
+
+    }
+
+    public interface IContentReaderGrain : IGrainWithStringKey
+    {
+        Task<IEnumerable<EntityHistoryViewModel>> EntityHistoryByEntityId();
+        Task<IEnumerable<EntityHistoryViewModel>> EntityHistoryToList();
+
+        Task<FeedItemViewModel> FeedItemById();
+        Task<IEnumerable<FeedItemPreviewViewModel>> FeedItemsByFeedId();
+
+        Task<IEnumerable<FeedViewModel>> FeedsToList();
+
+        Task<IEnumerable<PageTreeViewModel>> PagesToList();
+        Task<PageViewModel> PageById();
+        Task<PageViewModel> PageByName();
+    }
+
 }

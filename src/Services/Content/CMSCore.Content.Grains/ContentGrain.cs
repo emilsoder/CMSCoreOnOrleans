@@ -8,6 +8,7 @@ using CMSCore.Content.Models;
 using CMSCore.Content.Models.Shared;
 using CMSCore.Shared.Abstractions.Extensions;
 using CMSCore.Shared.Abstractions.Types.Results;
+using CMSCore.Shared.Types.Content.Feed;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -35,7 +36,7 @@ namespace CMSCore.Content.Grains
 
         #region Read
 
-        public async Task<IEnumerable<Page>> Pages()
+        public async Task<IEnumerable<Page>> PagesToList()
         {
             try
             {
@@ -81,7 +82,7 @@ namespace CMSCore.Content.Grains
             }
         }
 
-        public async Task<IEnumerable<Feed>> Feeds()
+        public async Task<IEnumerable<Feed>> FeedsToList()
         {
             try
             {
@@ -94,7 +95,7 @@ namespace CMSCore.Content.Grains
             }
         }
 
-        public async Task<IEnumerable<FeedItem>> FeedItems()
+        public async Task<IEnumerable<FeedItem>> FeedItemsToList()
         {
             try
             {
@@ -107,7 +108,7 @@ namespace CMSCore.Content.Grains
             }
         }
 
-        public async Task<IEnumerable<FeedItem>> FeedItems(string feedId)
+        public async Task<IEnumerable<FeedItem>> FeedItemsByFeedId(string feedId)
         {
             try
             {
@@ -120,7 +121,7 @@ namespace CMSCore.Content.Grains
             }
         }
 
-        public async Task<FeedItem> FeedItemDetails(string feedItemId)
+        public async Task<FeedItem> FeedItemById(string feedItemId)
         {
             try
             {
@@ -134,7 +135,7 @@ namespace CMSCore.Content.Grains
         }
 
 
-        public async Task<IEnumerable<EntityHistory>> EntityHistory(string entityId)
+        public async Task<IEnumerable<EntityHistory>> EntityHistoryByEntityId(string entityId)
         {
             try
             {
@@ -147,7 +148,7 @@ namespace CMSCore.Content.Grains
             }
         }
 
-        public async Task<IEnumerable<EntityHistory>> EntityHistory()
+        public async Task<IEnumerable<EntityHistory>> EntityHistoryToList()
         {
             try
             {
@@ -281,6 +282,34 @@ namespace CMSCore.Content.Grains
                 return OperationResult.Failed(ex.Message);
             }
         }
+        public async Task<IOperationResult> Update(UpdateFeedItemViewModel entity, string entityId, string userId)
+        {
+            try
+            {
+                var set = _context.Set<FeedItem>()?
+                    .Include(x => x.EntityHistory);
+
+                var entityToUpdate = await (set ?? throw new Exception("No entities found in set."))
+                    .FirstOrDefaultAsync(x => x.Id == entityId);
+
+                if (entityToUpdate == null)
+                    throw new Exception("Entity to update was not found.");
+
+                entityToUpdate.Description = entity.Description;
+                entityToUpdate.Title = entity.Title;
+                entityToUpdate.StaticContent.Content = entity.Content;
+                entityToUpdate.StaticContent.IsContentMarkdown = entity.IsContentMarkdown;
+                entityToUpdate.Tags = entityToUpdate.Tags.AsTagCollection(entity.Tags);
+                entityToUpdate.CommentsEnabled = entity.CommentsEnabled;
+
+                return await UpdateEntity(entityToUpdate, userId);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex);
+                return OperationResult.Failed(ex.Message);
+            }
+        }
 
         private async Task<IOperationResult> UpdateEntity<T>(T entity, string userId) where T : EntityBase
         {
@@ -340,4 +369,5 @@ namespace CMSCore.Content.Grains
         #endregion
 
     }
+
 }
