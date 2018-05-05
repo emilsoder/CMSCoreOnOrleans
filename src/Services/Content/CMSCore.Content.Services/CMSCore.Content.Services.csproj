@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Core\CMSCore.Shared.Abstractions\CMSCore.Shared.Abstractions.csproj" />
+    <ProjectReference Include="..\CMSCore.Content.Data\CMSCore.Content.Data.csproj" />
+    <ProjectReference Include="..\CMSCore.Content.GrainInterfaces\CMSCore.Content.GrainInterfaces.csproj" />
+  </ItemGroup>
+
+</Project>

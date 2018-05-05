@@ -1,5 +1,8 @@
-﻿namespace CMSCore.Content.Models
+﻿using System;
+
+namespace CMSCore.Content.Models
 {
+    
     public enum OperationType
     {
         Create = 1,

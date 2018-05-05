@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using CMSCore.Content.Data;
-using CMSCore.Content.Models;
-using CMSCore.Content.Models.Shared;
+using CMSCore.Content.GrainInterfaces;
+using CMSCore.Content.GrainInterfaces.Types;
+using CMSCore.Content.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xunit;
@@ -11,118 +13,119 @@ namespace CMSCore.Content.Grains.Tests
 {
     public class Grains_IntegrationTests
     {
+        private readonly AccountManagerGrain _accountManagerGrain;
+        private readonly ContentManagerGrain _contentManagerGrain;
+        private readonly IContentReaderGrain _contentReaderGrain;
+
         public Grains_IntegrationTests()
         {
-            _context = new ContentDbContext(ContentDbContextOptions.DefaultPostgresOptions);
-            _accountGrain = new AccountGrain(_context, CreateMockLogger());
-        }
-
-        private readonly AccountGrain _accountGrain;
-        private readonly ContentDbContext _context;
-        private string adminId = "9d7ea03d-f23d-462e-a2a7-c40f9c2d4a87";
-
-        private ILogger<AccountGrain> CreateMockLogger()
-        {
-            return new ServiceCollection()
+            var context = new ContentDbContext(ContentDbContextOptions.DefaultPostgresOptions);
+            var repository = new RepositoryManager(context);
+            var logger = new ServiceCollection()
                 .AddLogging()
-                .BuildServiceProvider().GetService<ILoggerFactory>().CreateLogger<AccountGrain>();
+                .BuildServiceProvider().GetService<ILoggerFactory>();
+
+            _accountManagerGrain = new AccountManagerGrain(repository, logger.CreateLogger<AccountManagerGrain>());
+            _accountManagerGrain.UserId = kalleKarlssonId;
+
+            _contentManagerGrain = new ContentManagerGrain(repository, logger.CreateLogger<ContentManagerGrain>());
+            _contentManagerGrain.UserId = kalleKarlssonId;
+
+            _contentReaderGrain = new ContentReaderGrain(context, logger.CreateLogger<ContentReaderGrain>());
         }
 
-        private string test4UserId = "ab3615ee-f4ad-427f-bd01-d73af5a53a96";
+        //private string adminId = "e0254192-fbc4-4054-82b4-40df643d05f6";
+        private string kalleKarlssonId = "085396b3-2d64-4e02-9fe7-755c7488009a";
 
         [Fact]
-        public void Create_User_Throws()
+        public void GetFeeds()
         {
-            // Arrange
-            var user = new User(Guid.NewGuid().ToString())
+            var feeds = _contentReaderGrain.FeedsToList().GetAwaiter().GetResult();
+
+            var fds = feeds;
+
+            Assert.Contains(fds, x => x.FeedItems.Any());
+        }
+
+        [Fact]
+        public void Create_User()
+        {
+            var userViewModel = new CreateUserViewModel
             {
-                FirstName = "Integration5",
-                LastName = "Test5",
-                Email = "integration5@test5.com",
+                Email = "kalle.karlsson@cmscore.com",
+                FirstName = "Kalle",
+                LastName = "Karlsson",
+                IdentityUserId = Guid.NewGuid().ToString()
             };
-            var operation = new CreateOperation<User>(adminId, user);
+
             // Act
-            var result = _accountGrain.Create(operation).GetAwaiter().GetResult();
+            var result = _accountManagerGrain.Create(userViewModel).GetAwaiter().GetResult();
 
             // Assert
-            Assert.True(result.Succeeded == false && result.Message != null);
+            Assert.True(result.Succeeded);
         }
 
 
         [Fact]
-        public void Verify_History_OnCreate()
+        public void Create_Page_Test()
         {
-            // Arrange
-            var user = new User(Guid.NewGuid().ToString())
+            var viewModel = new CreatePageViewModel()
             {
-                FirstName = "Integration5",
-                LastName = "Test5",
-                Email = "integration5@test5.com",
+                Content = "Welcome to my first page",
+                FeedEnabled = true,
+                Name = "My first page",
+                IsContentMarkdown = true
             };
-            var operation = new CreateOperation<User>(adminId, user);
 
             // Act
-            var result = _accountGrain.Create(operation).GetAwaiter().GetResult();
+            var result = _contentManagerGrain.Create(viewModel).GetAwaiter().GetResult();
 
             // Assert
             Assert.True(result.Succeeded);
-
-
-            var addedUser = _accountGrain.Find(user.Id).GetAwaiter().GetResult();
-
-            var userEntityHistory = addedUser?.EntityHistory;
-
-            Assert.True(userEntityHistory != null && userEntityHistory.Any());
         }
 
         [Fact]
-        public void Verify_History_OnDelete()
+        public void Add_FeedItem_Test()
         {
-            var test3User = _accountGrain.Find(test4UserId).GetAwaiter().GetResult();
+            var feedId = _contentReaderGrain.FeedsToList().GetAwaiter().GetResult().FirstOrDefault()?.Id;
 
+            Assert.True(feedId != null);
 
-            var operation = new DeleteOperation<User>(adminId, test3User.Id);
+            var viewModel = new CreateFeedItemViewModel()
+            {
+                Content = "Welcome to my first feed item",
+                IsContentMarkdown = true,
+                CommentsEnabled = true,
+                Description = "First feed item",
+                Tags = new List<string>() { "Tag 1", "Tag 2" },
+                Title = "Feed item 1",
+                FeedId = feedId
+            };
 
             // Act
-            var result = _accountGrain.Delete(operation).GetAwaiter().GetResult();
+            var result = _contentManagerGrain.Create(viewModel).GetAwaiter().GetResult();
 
+            // Assert
             Assert.True(result.Succeeded);
-
-            var updatedUser = _accountGrain.Find(test4UserId).GetAwaiter().GetResult();
-
-            var history = updatedUser.EntityHistory;
-
-            var containsUpdate = history.Any(x => x.OperationType == OperationType.Delete);
-
-            Assert.True(containsUpdate);
-
-            var removedHistory = _context.RemovedEntities;
-            var entityIsInRemovedTable = removedHistory.Any(x => x.EntityId == test4UserId);
-
-            Assert.True(entityIsInRemovedTable);
         }
-
         [Fact]
-        public void Verify_History_OnUpdate()
+        public void Update_Feed_Test()
         {
-            var test3User = _accountGrain.Find(test4UserId).GetAwaiter().GetResult();
+            var feedId = _contentReaderGrain.FeedsToList().GetAwaiter().GetResult().FirstOrDefault()?.Id;
 
-            test3User.LastName = "UPDATEDffefesfsfe USER";
+            Assert.True(feedId != null);
 
-            var operation = new UpdateOperation<User>(adminId, test3User.Id, test3User);
+            var viewModel = new UpdateFeedViewModel()
+            {
+                Id = feedId,
+                Name = "Feed name updated"
+            };
 
             // Act
-            var result = _accountGrain.Update(operation).GetAwaiter().GetResult();
+            var result = _contentManagerGrain.Update(viewModel, feedId).GetAwaiter().GetResult();
 
+            // Assert
             Assert.True(result.Succeeded);
-
-            var updatedUser = _accountGrain.Find(test4UserId).GetAwaiter().GetResult();
-
-            var history = updatedUser.EntityHistory;
-
-            var containsUpdate = history.Any(x => x.OperationType == OperationType.Update);
-
-            Assert.True(containsUpdate);
         }
     }
 }

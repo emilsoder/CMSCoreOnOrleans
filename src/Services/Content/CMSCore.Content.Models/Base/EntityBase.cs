@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CMSCore.Content.Models
 {
+    
     public abstract class EntityBase
     {
         private bool _isRemoved;
@@ -28,7 +29,7 @@ namespace CMSCore.Content.Models
                 if (_isRemoved) IsDisabled = true;
             }
         }
-
+         
         public virtual DateTime Created { get; set; }
         public virtual DateTime Modified { get; set; } = DateTime.Now;
 

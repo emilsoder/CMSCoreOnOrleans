@@ -8,7 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Orleans;
 using Orleans.Configuration;
-
+using Orleans.Hosting;
 namespace CMSCore.Content.Api
 {
     public class Startup
@@ -23,7 +23,7 @@ namespace CMSCore.Content.Api
             services.AddSingleton<IClusterClient>(CreateClusterClient);
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, Microsoft.AspNetCore.Hosting.IHostingEnvironment env)
         {
             if (env.IsDevelopment())
             {
@@ -42,8 +42,10 @@ namespace CMSCore.Content.Api
             var client = new ClientBuilder()
                 .ConfigureApplicationParts(parts =>
                 {
-                    parts.AddApplicationPart(typeof(IContentGrain).Assembly);
-                    parts.AddApplicationPart(typeof(IAccountGrain).Assembly);
+                    parts.AddApplicationPart(typeof(IContentManagerGrain).Assembly).WithCodeGeneration();
+                    parts.AddApplicationPart(typeof(IContentReaderGrain).Assembly).WithCodeGeneration();
+                    parts.AddApplicationPart(typeof(IAccountManagerGrain).Assembly).WithCodeGeneration();
+                    parts.AddApplicationPart(typeof(IAccountReaderGrain).Assembly).WithCodeGeneration();
                 })
                 .Configure<ClusterOptions>(options =>
                 {

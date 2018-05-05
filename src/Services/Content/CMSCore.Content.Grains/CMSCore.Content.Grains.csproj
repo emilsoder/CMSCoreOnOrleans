@@ -5,14 +5,17 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <LangVersion>7.2</LangVersion>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.1.0-preview2-final" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.1.0-preview2-final" />
     <PackageReference Include="Microsoft.Orleans.Core.Abstractions" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Orleans.OrleansCodeGenerator.Build" Version="2.0.0" />
     <PackageReference Include="System.Runtime" Version="4.3.0" />
   </ItemGroup>
 
@@ -20,6 +23,7 @@
     <ProjectReference Include="..\..\..\Core\CMSCore.Shared.Abstractions\CMSCore.Shared.Abstractions.csproj" />
     <ProjectReference Include="..\CMSCore.Content.Data\CMSCore.Content.Data.csproj" />
     <ProjectReference Include="..\CMSCore.Content.GrainInterfaces\CMSCore.Content.GrainInterfaces.csproj" />
+    <ProjectReference Include="..\CMSCore.Content.Services\CMSCore.Content.Services.csproj" />
   </ItemGroup>
 
 </Project>

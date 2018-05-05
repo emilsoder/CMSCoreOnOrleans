@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CMSCore.Content.Data;
 using CMSCore.Content.Grains;
+using CMSCore.Content.Services;
 using CMSCore.Shared.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,10 +36,17 @@ namespace CMSCore.Content.Silo
                 //.ConfigureEndpoints(siloPort: 11111, gatewayPort: 30000)
                 .ConfigureApplicationParts(parts =>
                 {
-                    parts.AddApplicationPart(typeof(ContentGrain).Assembly)
-                        .WithReferences();
-                    parts.AddApplicationPart(typeof(AccountGrain).Assembly)
-                        .WithReferences();
+                    parts.AddApplicationPart(typeof(ContentManagerGrain).Assembly)
+                        .WithReferences().WithCodeGeneration();
+
+                    parts.AddApplicationPart(typeof(ContentReaderGrain).Assembly)
+                        .WithReferences().WithCodeGeneration();
+
+                    parts.AddApplicationPart(typeof(AccountManagerGrain).Assembly)
+                        .WithReferences().WithCodeGeneration();
+
+                    parts.AddApplicationPart(typeof(AccountReaderGrain).Assembly)
+                        .WithReferences().WithCodeGeneration();
                 })
                 .ConfigureLogging(builder =>
                 {
@@ -80,6 +88,11 @@ namespace CMSCore.Content.Silo
             services.AddDbContext<ContentDbContext>(x => x.UseNpgsql(DatabaseConnectionConst.CMSCore),
                 ServiceLifetime.Singleton);
             //services.AddScoped<ContentDbContext>(provider => provider.GetService<ContentDbContext>());
+
+            // -----------------------------------------------------------------
+            services.AddSingleton<IRepositoryManager, RepositoryManager>();
+            // -----------------------------------------------------------------
+
             //services.AddSingleton<IRepository, RepositoryBase>(x => new RepositoryBase(x.GetService<DbContext>()));ContentDbContextOptions.DefaultPostgresOptionsBuilder
             return services;
         }

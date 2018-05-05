@@ -1,7 +1,7 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using CMSCore.Content.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace CMSCore.Content.Data
 {
@@ -16,15 +16,11 @@ namespace CMSCore.Content.Data
 
         public DbSet<Feed> Feeds { get; set; }
         public DbSet<FeedItem> FeedItems { get; set; }
-         public DbSet<Tag> Tags { get; set; }
+        public DbSet<Tag> Tags { get; set; }
         public DbSet<Comment> Comments { get; set; }
-
-
         public DbSet<StaticContent> StaticContents { get; set; }
 
         public DbSet<EntityHistory> EntityHistory { get; set; }
-        public DbSet<RemovedEntity> RemovedEntities { get; set; }
-         
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -38,8 +34,6 @@ namespace CMSCore.Content.Data
 
             modelBuilder.Entity<StaticContent>().HasKey(x => x.Id);
             modelBuilder.Entity<EntityHistory>().HasKey(x => x.Id);
-            modelBuilder.Entity<RemovedEntity>().HasKey(x => x.Id);
-             
 
             modelBuilder.Entity<User>()
                 .HasIndex(x => x.IdentityUserId)
@@ -50,42 +44,23 @@ namespace CMSCore.Content.Data
                 .WithMany(x => x.FeedItems)
                 .HasForeignKey(x => x.FeedId);
         }
-    }
 
-    public class ContentDbContextOptions
-    {
-        public static DbContextOptions DefaultPostgresOptions =>
-            new DbContextOptionsBuilder()
-                .UseNpgsql(DatabaseConnectionConst.CMSCore)
-                .UseLazyLoadingProxies()
-                .Options;
-
-        public static Action<DbContextOptionsBuilder> DefaultPostgresOptionsBuilder
-            => builder => new DbContextOptionsBuilder()
-                .UseNpgsql(DatabaseConnectionConst.CMSCore);
-        //.UseLazyLoadingProxies();
-
-        public static DbContextOptionsBuilder DefaultPostgresOptionsBuild
-            => new DbContextOptionsBuilder()
-                .UseNpgsql(DatabaseConnectionConst.CMSCore)
-                .UseLazyLoadingProxies();
-    }
-
-    public class ContentDbContextFactory : IDesignTimeDbContextFactory<ContentDbContext>
-    {
-        public ContentDbContext CreateDbContext(string[] args)
+        public void LoadRelatedEntities()
         {
-            var optionsBuilder = new DbContextOptionsBuilder();
+            this.Pages
+                .Include(x => x.StaticContent)
+                .Include(x => x.Feed)
+                .ThenInclude(x => x.FeedItems)
+                .Load();
 
-            optionsBuilder.UseNpgsql(DatabaseConnectionConst.CMSCore);
+            this.FeedItems
+                .Include(x => x.StaticContent)
+                .Include(x => x.Tags)
+                .Include(x => x.Comments)
+                .Include(x => x.Feed)
+                .Load();
 
-            return new ContentDbContext(optionsBuilder.Options);
+            this.EntityHistory.Load();
         }
-    }
-
-    public class DatabaseConnectionConst
-    {
-        public const string CMSCore =
-            "Host=localhost;Port=5432;Database=cmscoredb_dev2;User ID=postgres; Password=postgres";
     }
 }

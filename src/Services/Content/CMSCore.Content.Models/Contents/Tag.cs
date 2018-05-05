@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace CMSCore.Content.Models
 {
+    
     public class Tag : EntityBase
     {
         public Tag() { }

@@ -4,36 +4,40 @@ using System.Linq;
 using System.Threading.Tasks;
 using CMSCore.Content.Data;
 using CMSCore.Content.GrainInterfaces;
+using CMSCore.Content.GrainInterfaces.Types;
 using CMSCore.Content.Models;
 using CMSCore.Shared.Abstractions.Extensions;
-using CMSCore.Shared.Types.Content.EntityHistory;
-using CMSCore.Shared.Types.Content.Feed;
-using CMSCore.Shared.Types.Extensions.Content;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Orleans;
+using static CMSCore.Content.Grains.Extensions.ContentReaderExtensions;
 
 namespace CMSCore.Content.Grains
 {
     public class ContentReaderGrain : Grain, IContentReaderGrain
     {
         private readonly ContentDbContext _context;
-        private readonly ILogger<ContentGrain> _logger;
+        private readonly ILogger<ContentReaderGrain> _logger;
 
-        public ContentReaderGrain(ContentDbContext context, ILogger<ContentGrain> logger = null)
+        public ContentReaderGrain(ContentDbContext context, ILogger<ContentReaderGrain> logger = null)
         {
             _context = context;
-            _logger = logger ?? ServiceProvider.GetService<ILogger<ContentGrain>>();
+            _logger = logger ?? ServiceProvider.GetService<ILogger<ContentReaderGrain>>();
+            _context.LoadRelatedEntities();
         }
 
         private string ProvidedPrimaryKey => (this).GetPrimaryKeyString();
 
-        public async Task<IEnumerable<PageTreeViewModel>> PagesToList()
+        #region Page
+
+        public Task<IEnumerable<PageTreeViewModel>> PagesToList()
         {
             try
             {
-                return (await _context.Set<Page>().ToListAsync())?.ViewModel();
+                var pages = _context.Pages;
+                var result = GetPageTreeViewModels(pages);
+                return Task.FromResult(result);
+                //return (await _context.Set<Page>().ToListAsync())?.ViewModel();
             }
             catch (Exception ex)
             {
@@ -42,17 +46,27 @@ namespace CMSCore.Content.Grains
             }
         }
 
-        public async Task<PageViewModel> PageById()
+        public Task<PageViewModel> PageById()
+        {
+            var pages = _context.Pages;
+
+
+            var page = pages.FirstOrDefault(x => x.Id == ProvidedPrimaryKey);
+
+            var viewModel = ConvertToPageViewModel(page);
+
+            return Task.FromResult(viewModel);
+        }
+
+        public Task<PageViewModel> PageByName()
         {
             try
             {
-                return (await (_context.Set<Page>()
-                        .Include(x => x.StaticContent)
-                        .Include(x => x.Feed)
-                        .ThenInclude(x => x.FeedItems))
-                    .Include(x => x.EntityHistory)
-                    .FirstOrDefaultAsync(x => x.Id == ProvidedPrimaryKey))
-                    ?.ViewModel();
+                var set = _context.Pages;
+
+                var page = set.FirstOrDefault(x => x.NormalizedName == ProvidedPrimaryKey);
+
+                return Task.FromResult(ConvertToPageViewModel(page));
             }
             catch (Exception ex)
             {
@@ -61,16 +75,43 @@ namespace CMSCore.Content.Grains
             }
         }
 
-        public async Task<PageViewModel> PageByName()
+        public Task<bool> CreateComment(CommentViewModel comment)
         {
             try
             {
-                return (await _context.Set<Page>()
-                        .Include(x => x.StaticContent)
-                        .Include(x => x.Feed)
-                        .ThenInclude(x => x.FeedItems)
-                        .FirstOrDefaultAsync(x => x.NormalizedName == ProvidedPrimaryKey))
-                    ?.ViewModel();
+                var feedItem = _context.FeedItems.Find(ProvidedPrimaryKey);
+                if (feedItem == null || !feedItem.CommentsEnabled) throw new Exception("Cannot add comment.");
+                var _comment = new Comment(comment.Text, comment.Text);
+                feedItem.Comments.Add(_comment);
+                _context.SaveChanges();
+
+                return Task.FromResult(true);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex);
+                return Task.FromResult(false);
+            }
+        }
+
+        #endregion
+
+        #region Feeds
+
+        public Task<IEnumerable<FeedViewModel>> FeedsToList()
+        {
+            try
+            {
+                var feeds = _context.Feeds;
+                var lst = new List<FeedViewModel>();
+
+                foreach (var feed in feeds)
+                {
+                    lst.Add(GetFeedViewModel(feed));
+                }
+
+                IEnumerable<FeedViewModel> vm = lst;
+                return Task.FromResult(vm);
             }
             catch (Exception ex)
             {
@@ -79,12 +120,13 @@ namespace CMSCore.Content.Grains
             }
         }
 
-        public async Task<IEnumerable<FeedViewModel>> FeedsToList()
+        public Task<IEnumerable<FeedItemPreviewViewModel>> FeedItemsByFeedId()
         {
             try
             {
-                return (await _context.Set<Feed>().ToListAsync())
-                    ?.ViewModel();
+                var filtered = _context.FeedItems.Where(x => x.FeedId == ProvidedPrimaryKey);
+                var vm = GetFeedItemPreviewModels(filtered);
+                return Task.FromResult(vm);
             }
             catch (Exception ex)
             {
@@ -93,14 +135,13 @@ namespace CMSCore.Content.Grains
             }
         }
 
-        public async Task<IEnumerable<FeedItemPreviewViewModel>> FeedItemsByFeedId()
+        public Task<FeedItemViewModel> FeedItemById()
         {
             try
             {
-                return (await _context.Set<FeedItem>()
-                    .Include(x => x.StaticContent)
-                    .Where(x => x.FeedId == ProvidedPrimaryKey).ToListAsync())
-                    ?.ViewModel();
+                var feedItem = _context.FeedItems?.FirstOrDefault(x => x.Id == ProvidedPrimaryKey);
+                var vm = GetFeedItemViewModel(feedItem);
+                return Task.FromResult(vm);
             }
             catch (Exception ex)
             {
@@ -109,14 +150,16 @@ namespace CMSCore.Content.Grains
             }
         }
 
-        public async Task<FeedItemViewModel> FeedItemById()
+        #endregion
+
+        #region Entity history
+
+        public Task<IEnumerable<EntityHistoryViewModel>> EntityHistoryByEntityId()
         {
             try
             {
-                return (await _context.Set<FeedItem>()
-                    .Include(x => x.StaticContent)
-                    .FirstOrDefaultAsync(x => x.Id == ProvidedPrimaryKey))
-                    ?.ViewModel();
+                var items = _context.EntityHistory.Where(x => x.EntityId == ProvidedPrimaryKey);
+                return Task.FromResult(GetEntityHistoryViewModels(items));
             }
             catch (Exception ex)
             {
@@ -125,15 +168,13 @@ namespace CMSCore.Content.Grains
             }
         }
 
-
-        public async Task<IEnumerable<EntityHistoryViewModel>> EntityHistoryByEntityId()
+        public Task<IEnumerable<EntityHistoryViewModel>> EntityHistoryToList()
         {
             try
             {
-                return (await _context.Set<EntityHistory>()
-                    .Where(x => x.EntityId == ProvidedPrimaryKey)
-                    .ToListAsync())
-                    ?.ViewModel();
+                var items = _context.EntityHistory;
+
+                return Task.FromResult(GetEntityHistoryViewModels(items));
             }
             catch (Exception ex)
             {
@@ -142,19 +183,6 @@ namespace CMSCore.Content.Grains
             }
         }
 
-        public async Task<IEnumerable<EntityHistoryViewModel>> EntityHistoryToList()
-        {
-            try
-            {
-                return (await _context.Set<EntityHistory>()
-                    .ToListAsync())
-                    ?.ViewModel();
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex);
-                return null;
-            }
-        }
+        #endregion
     }
 }
