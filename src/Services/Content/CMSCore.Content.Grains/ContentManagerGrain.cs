@@ -35,7 +35,7 @@ namespace CMSCore.Content.Grains
 
         public async Task<IOperationResult> Create(CreatePageViewModel model)
         {
-            var entity = model.CreateModel();
+            var entity = model.CreateModel(UserId);
             return await _repository.CreateAsync(entity, UserId);
         }
 
@@ -70,17 +70,31 @@ namespace CMSCore.Content.Grains
 
         public async Task<IOperationResult> Delete(DeletePageViewModel model)
         {
-            return await _repository.DeleteAsync<Page>(model.Id, UserId);
+            return await _repository.DeletePageAsync(model.Id, UserId);
         }
 
         public async Task<IOperationResult> Delete(DeleteFeedViewModel model)
         {
-            return await _repository.DeleteAsync<Feed>(model.Id, UserId);
+            return await _repository.DeleteFeedAsync(model.Id, UserId);
         }
 
         public async Task<IOperationResult> Delete(DeleteFeedItemViewModel model)
         {
-            return await _repository.DeleteAsync<FeedItem>(model.Id, UserId);
+            return await _repository.DeleteFeedItemAsync(model.Id, UserId);
+        }
+        public async Task<IOperationResult> ConfirmDelete(DeletePageViewModel model)
+        {
+            return await _repository.ConfirmDeletePageAsync(model.Id, UserId);
+        }
+
+        public async Task<IOperationResult> ConfirmDelete(DeleteFeedViewModel model)
+        {
+            return await _repository.ConfirmDeleteFeedAsync(model.Id, UserId);
+        }
+
+        public async Task<IOperationResult> ConfirmDelete(DeleteFeedItemViewModel model)
+        {
+            return await _repository.ConfirmDeleteFeedItemAsync(model.Id, UserId);
         }
 
         #endregion

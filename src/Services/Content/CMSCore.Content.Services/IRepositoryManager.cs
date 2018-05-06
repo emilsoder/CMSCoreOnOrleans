@@ -26,5 +26,14 @@ namespace CMSCore.Content.Services
         Task<IOperationResult> DeleteAsync<TEntity>(string entityId, string currentUserId) where TEntity : EntityBase;
 
         Task<bool> AnyAsync<TEntity>(Expression<Func<TEntity, bool>> expression) where TEntity : EntityBase;
+
+        Task<IOperationResult> DeleteFeedAsync(string entityId, string currentUserId);
+        Task<IOperationResult> DeleteFeedItemAsync(string entityId, string currentUserId);
+        Task<IOperationResult> DeletePageAsync(string entityId, string currentUserId); 
+        
+        Task<IOperationResult> ConfirmDeleteFeedAsync(string entityId, string currentUserId);
+        Task<IOperationResult> ConfirmDeleteFeedItemAsync(string entityId, string currentUserId,
+            bool saveChanges = true);
+        Task<IOperationResult> ConfirmDeletePageAsync(string entityId, string currentUserId);
     }
 }

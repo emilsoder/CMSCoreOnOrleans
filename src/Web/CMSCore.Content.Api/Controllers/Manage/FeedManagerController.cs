@@ -7,7 +7,7 @@ using CMSCore.Content.GrainInterfaces.Types;
 using Microsoft.AspNetCore.Mvc;
 using Orleans;
 
-namespace CMSCore.Content.Api.Controllers.Manage
+namespace CMSCore.Content.Api.Controllers 
 {
     [Route(ManageConst.BaseRoute + "/feed")]
     public class FeedManagerController : Controller
@@ -20,7 +20,7 @@ namespace CMSCore.Content.Api.Controllers.Manage
             _client.GetGrain<IContentManagerGrain>(CurrentUserHelper.UserId);
 
         [HttpPut("{id}"), ValidateModel]
-        public async Task<IActionResult> Update([Required]string id, [FromBody, Required] UpdateFeedViewModel model)
+        public async Task<IActionResult> Update([Required]string id, [FromBody] UpdateFeedViewModel model)
         {
             try
             {

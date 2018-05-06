@@ -27,9 +27,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Core\CMSCore.Shared.Abstractions\CMSCore.Shared.Abstractions.csproj" />
-    <ProjectReference Include="..\..\..\Core\CMSCore.Shared.Services\CMSCore.Shared.Services.csproj" />
     <ProjectReference Include="..\CMSCore.Identity.GrainInterfaces\CMSCore.Identity.GrainInterfaces.csproj" />
     <ProjectReference Include="..\CMSCore.Identity.Models\CMSCore.Identity.Models.csproj" />
+    <ProjectReference Include="..\CMSCore.Identity.Services\CMSCore.Identity.Services.csproj" />
   </ItemGroup>
  
 </Project>

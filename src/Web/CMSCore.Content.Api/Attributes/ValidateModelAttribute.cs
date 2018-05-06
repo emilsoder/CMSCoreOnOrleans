@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -7,31 +8,22 @@ namespace CMSCore.Content.Api.Attributes
 {
     public class ValidateModelAttribute : ActionFilterAttribute
     {
-        private readonly string _errorMessage = "An error occured.";
-
-        public ValidateModelAttribute()
-        {
-        }
-
-        /// <summary>
-        /// Validates provided parameters
-        /// </summary>
-        /// <param name="errorMessage">The error message to display</param>
-         public ValidateModelAttribute(string errorMessage) 
-        {
-            _errorMessage = errorMessage ?? _errorMessage;
-        }
-
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            if (!context.ModelState.IsValid)
+            try
             {
-                context.Result = new BadRequestObjectResult(new
+                if (!context.ModelState.IsValid)
                 {
-                    errorMessage = _errorMessage,
-                     modelState = context.ModelState
-                });
+                    context.Result = new BadRequestObjectResult(new
+                    {
+                        errors = context.ModelState?.Select(x => x.Value.Errors)
+                    });
+                }
+            }
+            catch (Exception)
+            {
+                return;
             }
         }
     }

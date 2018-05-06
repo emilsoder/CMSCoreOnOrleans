@@ -9,6 +9,7 @@ namespace CMSCore.Content.Grains.Extensions
     {
         internal static PageViewModel ConvertToPageViewModel(Page page)
         {
+            if (page == null) return null;
             var pvm = new PageViewModel
             {
                 Id = page.Id,
@@ -26,6 +27,7 @@ namespace CMSCore.Content.Grains.Extensions
 
         internal static FeedViewModel GetFeedViewModel(Feed feed)
         {
+            if (feed == null) return null;
             var fvm = new FeedViewModel
             {
                 Id = feed.Id,
@@ -43,20 +45,24 @@ namespace CMSCore.Content.Grains.Extensions
 
         internal static IEnumerable<PageTreeViewModel> GetPageTreeViewModels(IEnumerable<Page> pages)
         {
-            return pages.Select(page => new PageTreeViewModel
-            {
-                Id = page.Id,
-                Name = page.Name,
-                NormalizedName = page.NormalizedName
-            })
+            var enumerable = pages?.ToList();
+            if (enumerable == null || !enumerable.Any()) return null;
+            return enumerable.Select(page => new PageTreeViewModel
+                {
+                    Id = page.Id,
+                    Name = page.Name,
+                    NormalizedName = page.NormalizedName
+                })
                 .ToList();
         }
 
         internal static IEnumerable<FeedItemPreviewViewModel> GetFeedItemPreviewModels(IEnumerable<FeedItem> feedItems)
         {
+            var enumerable = feedItems?.ToList();
+            if (enumerable == null || !enumerable.Any()) return null;
             var feedItemsViewModels = new List<FeedItemPreviewViewModel>();
 
-            foreach (var item in feedItems)
+            foreach (var item in enumerable)
             {
                 feedItemsViewModels.Add(new FeedItemPreviewViewModel
                 {
@@ -77,6 +83,8 @@ namespace CMSCore.Content.Grains.Extensions
 
         internal static FeedItemViewModel GetFeedItemViewModel(FeedItem feedItem)
         {
+            if (feedItem == null) return null;
+
             var tagArray = feedItem.Tags?.Select(tag => tag.Name).ToArray() ?? new string[] { };
 
             var vm = new FeedItemViewModel
@@ -102,6 +110,8 @@ namespace CMSCore.Content.Grains.Extensions
 
         internal static CommentViewModel GetCommentViewModel(Comment comment)
         {
+            if (comment == null) return null;
+
             return new CommentViewModel
             {
                 FullName = comment.FullName,

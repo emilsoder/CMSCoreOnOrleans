@@ -24,12 +24,11 @@ namespace CMSCore.Content.Services
         public async Task<IOperationResult> UpdatePage(UpdatePageViewModel viewModel, string entityId,
             string currentUserId)
         {
+            if (viewModel == null) throw new Exception("viewModel is null");
+            if (string.IsNullOrEmpty(entityId)) throw new Exception("EntityId is null");
             try
             {
-                var set = await _context.Pages
-                    .Include(x => x.StaticContent)
-                    .Include(x => x.EntityHistory)
-                    .ToListAsync();
+                var set = await _context.Pages.ToListAsync();
 
                 if (set == null) throw new Exception("No entities found");
 
@@ -47,19 +46,21 @@ namespace CMSCore.Content.Services
 
                 _context.Update(entityToUpdate);
 
-                await _context.SaveChangesAsync();
+                var result = await _context.SaveChangesAsync();
 
-                return OperationResult.Success;
+                return result > 0 ? OperationResult.Success : OperationResult.Failed("No rows changed");
             }
             catch (Exception ex)
             {
-                return OperationResult.Failed(ex.Message);
+                return OperationResult.Failed(ex.Message + ex.InnerException?.Message);
             }
         }
 
         public async Task<IOperationResult> UpdateFeed(UpdateFeedViewModel viewModel, string entityId,
             string currentUserId)
         {
+            if (viewModel == null) throw new Exception("viewModel is null");
+            if (string.IsNullOrEmpty(entityId)) throw new Exception("EntityId is null");
             try
             {
                 var set = await _context.Feeds
@@ -78,19 +79,21 @@ namespace CMSCore.Content.Services
 
                 _context.Update(entityToUpdate);
 
-                await _context.SaveChangesAsync();
+                var result = await _context.SaveChangesAsync();
 
-                return OperationResult.Success;
+                return result > 0 ? OperationResult.Success : OperationResult.Failed("No rows changed");
             }
             catch (Exception ex)
             {
-                return OperationResult.Failed(ex.Message);
+                return OperationResult.Failed(ex.Message + ex.InnerException?.Message);
             }
         }
 
         public async Task<IOperationResult> UpdateFeedItem(UpdateFeedItemViewModel viewModel, string entityId,
             string currentUserId)
         {
+            if (viewModel == null) throw new Exception("viewModel is null");
+            if (string.IsNullOrEmpty(entityId)) throw new Exception("EntityId is null");
             try
             {
                 var set = await _context.FeedItems.ToListAsync();
@@ -113,19 +116,21 @@ namespace CMSCore.Content.Services
 
                 _context.Update(entityToUpdate);
 
-                await _context.SaveChangesAsync();
+                var result = await _context.SaveChangesAsync();
 
-                return OperationResult.Success;
+                return result > 0 ? OperationResult.Success : OperationResult.Failed("No rows changed");
             }
             catch (Exception ex)
             {
-                return OperationResult.Failed(ex.Message);
+                return OperationResult.Failed(ex.Message + ex.InnerException?.Message);
             }
         }
 
         public async Task<IOperationResult> UpdateUser(UpdateUserViewModel viewModel, string entityId,
             string currentUserId)
         {
+            if (viewModel == null) throw new Exception("viewModel is null");
+            if (string.IsNullOrEmpty(entityId)) throw new Exception("EntityId is null");
             try
             {
                 var set = await _context.Users.ToListAsync();
@@ -145,21 +150,227 @@ namespace CMSCore.Content.Services
 
                 _context.Update(entityToUpdate);
 
-                await _context.SaveChangesAsync();
+                var result = await _context.SaveChangesAsync();
 
-                return OperationResult.Success;
+                return result > 0 ? OperationResult.Success : OperationResult.Failed("No rows changed");
             }
             catch (Exception ex)
             {
-                return OperationResult.Failed(ex.Message);
+                return OperationResult.Failed(ex.Message + ex.InnerException?.Message);
             }
         }
+
+        //------------------
+
+        public async Task<IOperationResult> DeleteFeedAsync(string entityId, string currentUserId)
+        {
+            if (string.IsNullOrEmpty(entityId)) throw new Exception("EntityId is null");
+            try
+            {
+                var set = _context.Feeds.ToList();
+                var entity = set.FirstOrDefault(x => x.Id == entityId);
+                if (entity == null)
+                    throw new Exception("Entity to perform delete operation could not be loaded.");
+
+                entity.IsRemoved = true;
+                entity.EntityHistory.Add(new EntityHistory(entity.Id, currentUserId, OperationType.Delete));
+                _context.Update(entity);
+
+                var result = await _context.SaveChangesAsync();
+
+                return result > 0 ? OperationResult.Success : OperationResult.Failed("No rows changed");
+            }
+            catch (Exception ex)
+            {
+                return OperationResult.Failed(ex.Message + ex.InnerException?.Message);
+            }
+        }
+
+        public async Task<IOperationResult> DeleteFeedItemAsync(string entityId, string currentUserId)
+        {
+            if (string.IsNullOrEmpty(entityId)) throw new Exception("EntityId is null");
+            try
+            {
+                var set = _context.FeedItems.ToList();
+                var entity = set.FirstOrDefault(x => x.Id == entityId);
+                if (entity == null)
+                    throw new Exception("Entity to perform delete operation could not be loaded.");
+
+                entity.IsRemoved = true;
+                entity.EntityHistory.Add(new EntityHistory(entity.Id, currentUserId, OperationType.Delete));
+                _context.Update(entity);
+
+                var result = await _context.SaveChangesAsync();
+
+                return result > 0 ? OperationResult.Success : OperationResult.Failed("No rows changed");
+            }
+            catch (Exception ex)
+            {
+                return OperationResult.Failed(ex.Message + ex.InnerException?.Message);
+            }
+        }
+
+        public async Task<IOperationResult> DeletePageAsync(string entityId, string currentUserId)
+        {
+            if (string.IsNullOrEmpty(entityId)) throw new Exception("EntityId is null");
+            try
+            {
+                var set = _context.Pages.ToList();
+                var entity = set.FirstOrDefault(x => x.Id == entityId);
+                if (entity == null)
+                    throw new Exception("Entity to perform delete operation could not be loaded.");
+
+                entity.IsRemoved = true;
+                entity.IsDisabled = true;
+
+                entity.EntityHistory.Add(new EntityHistory(entity.Id, currentUserId, OperationType.Delete));
+                _context.Update(entity);
+
+                var result = await _context.SaveChangesAsync();
+
+                return result > 0 ? OperationResult.Success : OperationResult.Failed("No rows changed");
+            }
+            catch (Exception ex)
+            {
+                return OperationResult.Failed(ex.Message + ex.InnerException?.Message);
+            }
+        }
+
+        public async Task<IOperationResult> DeleteUserAsync(string entityId, string currentUserId)
+        {
+            if (string.IsNullOrEmpty(entityId)) throw new Exception("EntityId is null");
+            try
+            {
+                var set = _context.Users.Include(x => x.EntityHistory).ToList();
+                var entity = set.FirstOrDefault(x => x.Id == entityId);
+                if (entity == null)
+                    throw new Exception("Entity to perform delete operation could not be loaded.");
+
+                entity.IsRemoved = true;
+                entity.IsDisabled = true;
+
+                entity.EntityHistory.Add(new EntityHistory(entity.Id, currentUserId, OperationType.Delete));
+                _context.Update(entity);
+
+                var result = await _context.SaveChangesAsync();
+
+                return result > 0 ? OperationResult.Success : OperationResult.Failed("No rows changed");
+            }
+            catch (Exception ex)
+            {
+                return OperationResult.Failed(ex.Message + ex.InnerException?.Message);
+            }
+        }
+
+
+        // -----------------
+
+        public async Task<IOperationResult> ConfirmDeleteFeedAsync(string entityId, string currentUserId)
+        {
+            if (string.IsNullOrEmpty(entityId)) throw new Exception("EntityId is null");
+            try
+            {
+                var set = _context.Feeds.ToList();
+                var entity = set.FirstOrDefault(x => x.Id == entityId);
+                if (entity == null)
+                    throw new Exception("Entity to perform delete operation could not be loaded.");
+
+                _context.EntityHistory.Add(new EntityHistory(entity.Id, currentUserId, OperationType.ConfirmDelete));
+
+                if (entity.FeedItems != null && entity.FeedItems.Any())
+                {
+                    foreach (var feedItem in entity.FeedItems)
+                    {
+                        var res = await ConfirmDeleteFeedItemAsync(feedItem.Id, currentUserId, false);
+                    }
+                }
+
+                _context.Remove(entity);
+
+                var result = await _context.SaveChangesAsync();
+
+                return result > 0 ? OperationResult.Success : OperationResult.Failed("No rows changed");
+            }
+            catch (Exception ex)
+            {
+                return OperationResult.Failed(ex.Message + ex.InnerException?.Message);
+            }
+        }
+
+        public async Task<IOperationResult> ConfirmDeleteFeedItemAsync(string entityId, string currentUserId, bool saveChanges = true)
+        {
+            if (string.IsNullOrEmpty(entityId)) throw new Exception("EntityId is null");
+            try
+            {
+                var set = _context.FeedItems.ToList();
+                var entity = set.FirstOrDefault(x => x.Id == entityId);
+                if (entity == null)
+                    throw new Exception("Entity to perform delete operation could not be loaded.");
+
+                if (entity.StaticContent != null)
+                {
+                    _context.EntityHistory.Add(new EntityHistory(entity.StaticContent.Id, currentUserId,
+                    OperationType.ConfirmDelete));
+                    _context.Remove(entity.StaticContent);
+                }
+
+                var tagHistory = entity.Tags?.Select(x =>
+                    new EntityHistory(x.Id, currentUserId, OperationType.ConfirmDelete));
+                if (tagHistory != null)
+                {
+                    _context.AddRange(tagHistory);
+                    _context.RemoveRange(entity.Tags);
+                }
+                _context.EntityHistory.Add(new EntityHistory(entity.Id, currentUserId, OperationType.ConfirmDelete));
+                _context.Remove(entity);
+
+                if (!saveChanges)
+                {
+                    return OperationResult.Success;
+                }
+
+                var result = await _context.SaveChangesAsync();
+
+                return result > 0 ? OperationResult.Success : OperationResult.Failed("No rows changed");
+            }
+            catch (Exception ex)
+            {
+                return OperationResult.Failed(ex.Message + ex.InnerException?.Message);
+            }
+        }
+
+        public async Task<IOperationResult> ConfirmDeletePageAsync(string entityId, string currentUserId)
+        {
+            if (string.IsNullOrEmpty(entityId)) throw new Exception("EntityId is null");
+            try
+            {
+                var set = _context.Pages.ToList();
+                var entity = set.FirstOrDefault(x => x.Id == entityId);
+                if (entity == null)
+                    throw new Exception("Entity to perform delete operation could not be loaded.");
+
+                if (entity.Feed != null)
+                    await ConfirmDeleteFeedAsync(entity.Feed.Id, currentUserId);
+
+                _context.Remove(entity);
+
+                var result = await _context.SaveChangesAsync();
+
+                return result > 0 ? OperationResult.Success : OperationResult.Failed("No rows changed");
+            }
+            catch (Exception ex)
+            {
+                return OperationResult.Failed(ex.Message + ex.InnerException?.Message);
+            }
+        }
+
 
         #region Generic
 
         public async Task<IOperationResult> DeleteAsync<TEntity>(string entityId, string currentUserId)
             where TEntity : EntityBase
         {
+            if (string.IsNullOrEmpty(entityId)) throw new Exception("EntityId is null");
             try
             {
                 var set = _context.Set<TEntity>()?.Include(x => x.EntityHistory);
@@ -173,13 +384,13 @@ namespace CMSCore.Content.Services
                 entity.EntityHistory.Add(new EntityHistory(entity.Id, currentUserId, OperationType.Delete));
                 _context.Update(entity);
 
-                await _context.SaveChangesAsync();
+                var result = await _context.SaveChangesAsync();
 
-                return OperationResult.Success;
+                return result > 0 ? OperationResult.Success : OperationResult.Failed("No rows changed");
             }
             catch (Exception ex)
             {
-                return OperationResult.Failed(ex.Message);
+                return OperationResult.Failed(ex.Message + ex.InnerException?.Message);
             }
         }
 
@@ -187,6 +398,7 @@ namespace CMSCore.Content.Services
         public async Task<IOperationResult> CreateAsync<T>(T entity, string currentUserId)
             where T : EntityBase
         {
+            if (entity == null) throw new Exception("Entity is null");
             try
             {
                 entity.EntityHistory = new List<EntityHistory>()
@@ -198,13 +410,13 @@ namespace CMSCore.Content.Services
 
                 _context.Add(entity);
 
-                await _context.SaveChangesAsync();
+                var result = await _context.SaveChangesAsync();
 
-                return OperationResult.Success;
+                return result > 0 ? OperationResult.Success : OperationResult.Failed("No rows changed");
             }
             catch (Exception ex)
             {
-                return OperationResult.Failed(ex.Message);
+                return OperationResult.Failed(ex.Message + ex.InnerException?.Message);
             }
         }
 

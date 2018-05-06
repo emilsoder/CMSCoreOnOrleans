@@ -16,13 +16,11 @@ namespace CMSCore.Content.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> List()
         {
-            JsonResult jsonResult = null;
             try
             {
                 var grain = _client.GetGrain<IContentReaderGrain>(Guid.NewGuid().ToString());
                 var result = await grain.FeedsToList();
-                jsonResult = Json(result);
-                return jsonResult;
+                return base.Json(result);
             }
             catch (Exception ex)
             {

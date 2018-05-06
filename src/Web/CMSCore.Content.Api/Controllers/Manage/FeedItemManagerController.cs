@@ -20,7 +20,7 @@ namespace CMSCore.Content.Api.Controllers
         }
 
         [HttpPost, ValidateModel]
-        public async Task<IActionResult> Create([FromBody, Required] CreateFeedItemViewModel model)
+        public async Task<IActionResult> Create([FromBody] CreateFeedItemViewModel model)
         {
             try
             {
@@ -38,7 +38,7 @@ namespace CMSCore.Content.Api.Controllers
         [HttpPut("{id}"), ValidateModel]
         public async Task<IActionResult> Update(
             [Required] string id,
-            [FromBody, Required] UpdateFeedItemViewModel viewModel)
+            [FromBody] UpdateFeedItemViewModel viewModel)
         {
             try
             {

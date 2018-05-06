@@ -34,7 +34,7 @@ namespace CMSCore.Content.Grains
         {
             try
             {
-                var pages = _context.Pages;
+                var pages = _context.Pages.Where(x => x.IsRemoved == false || x.IsDisabled == false).ToList();
                 var result = GetPageTreeViewModels(pages);
                 return Task.FromResult(result);
                 //return (await _context.Set<Page>().ToListAsync())?.ViewModel();
@@ -49,9 +49,8 @@ namespace CMSCore.Content.Grains
         public Task<PageViewModel> PageById()
         {
             var pages = _context.Pages;
-
-
-            var page = pages.FirstOrDefault(x => x.Id == ProvidedPrimaryKey);
+             
+            var page = pages.FirstOrDefault(x => x.Id == ProvidedPrimaryKey && x.IsRemoved == false);
 
             var viewModel = ConvertToPageViewModel(page);
 
@@ -64,7 +63,7 @@ namespace CMSCore.Content.Grains
             {
                 var set = _context.Pages;
 
-                var page = set.FirstOrDefault(x => x.NormalizedName == ProvidedPrimaryKey);
+                var page = set.FirstOrDefault(x => x.NormalizedName == ProvidedPrimaryKey && x.IsRemoved == false);
 
                 return Task.FromResult(ConvertToPageViewModel(page));
             }
@@ -79,7 +78,7 @@ namespace CMSCore.Content.Grains
         {
             try
             {
-                var feedItem = _context.FeedItems.Find(ProvidedPrimaryKey);
+                var feedItem = _context.FeedItems.SingleOrDefault(x => x.Id == ProvidedPrimaryKey && x.IsRemoved == false);
                 if (feedItem == null || !feedItem.CommentsEnabled) throw new Exception("Cannot add comment.");
                 var _comment = new Comment(comment.Text, comment.Text);
                 feedItem.Comments.Add(_comment);

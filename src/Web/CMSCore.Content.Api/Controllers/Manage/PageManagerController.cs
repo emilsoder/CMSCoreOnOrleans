@@ -17,7 +17,7 @@ namespace CMSCore.Content.Api.Controllers
         public PageManagerController(IClusterClient client) => this._client = client;
 
         [HttpPost, ValidateModel]
-        public async Task<IActionResult> Create([FromBody, Required] CreatePageViewModel model)
+        public async Task<IActionResult> Create([FromBody] CreatePageViewModel model)
         {
             try
             {
@@ -33,7 +33,7 @@ namespace CMSCore.Content.Api.Controllers
         }
 
         [HttpPut("{id}"), ValidateModel]
-        public async Task<IActionResult> Update([Required]string id, [FromBody, Required] UpdatePageViewModel model)
+        public async Task<IActionResult> Update([Required]string id, [FromBody] UpdatePageViewModel model)
         {
             try
             {

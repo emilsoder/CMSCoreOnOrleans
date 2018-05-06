@@ -1,7 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
-namespace CMSCore.Shared.Services
+namespace CMSCore.Identity.Services
 {
+    
     public interface IEmailSender
     {
         Task SendEmailAsync(string email, string subject, string message);

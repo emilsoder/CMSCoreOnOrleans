@@ -1,6 +1,6 @@
 ﻿using CMSCore.Shared.Configuration;
 
-namespace CMSCore.Shared.Abstractions.Extensions
+namespace CMSCore.Identity.Grains.Extensions
 {
     public class UrlHelperExtensions
     {

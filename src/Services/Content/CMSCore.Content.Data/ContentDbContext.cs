@@ -51,15 +51,18 @@ namespace CMSCore.Content.Data
                 .Include(x => x.StaticContent)
                 .Include(x => x.Feed)
                 .ThenInclude(x => x.FeedItems)
+                .Include(x => x.EntityHistory)
                 .Load();
 
             this.FeedItems
                 .Include(x => x.StaticContent)
                 .Include(x => x.Tags)
                 .Include(x => x.Comments)
-                .Include(x => x.Feed)
+                 .Include(x => x.Feed).Include(x => x.EntityHistory)
                 .Load();
 
+            this.Users.Load();
+         
             this.EntityHistory.Load();
         }
     }

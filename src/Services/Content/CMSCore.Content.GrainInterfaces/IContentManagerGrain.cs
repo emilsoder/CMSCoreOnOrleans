@@ -23,6 +23,10 @@ namespace CMSCore.Content.GrainInterfaces
 
         Task<IOperationResult> Delete(DeletePageViewModel model);
         Task<IOperationResult> Delete(DeleteFeedViewModel model);
-        Task<IOperationResult> Delete(DeleteFeedItemViewModel model);
+        Task<IOperationResult> Delete(DeleteFeedItemViewModel model); 
+        
+        Task<IOperationResult> ConfirmDelete(DeletePageViewModel model);
+        Task<IOperationResult> ConfirmDelete(DeleteFeedViewModel model);
+        Task<IOperationResult> ConfirmDelete(DeleteFeedItemViewModel model);
     }
 }

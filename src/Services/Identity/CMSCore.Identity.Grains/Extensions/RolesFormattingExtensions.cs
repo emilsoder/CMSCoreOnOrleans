@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace CMSCore.Shared.Abstractions.Extensions
+namespace CMSCore.Identity.Grains.Extensions
 {
     public static class RolesFormattingExtensions
     {
