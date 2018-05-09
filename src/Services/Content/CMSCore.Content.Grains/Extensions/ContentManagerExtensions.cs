@@ -39,11 +39,7 @@ namespace CMSCore.Content.Grains.Extensions
                 StaticContent = model.GetStaticContent()
             };
 
-            page.Feed.EntityHistory = new List<EntityHistory>()
-            {
-                new EntityHistory(page.Feed.Id, currentUser, OperationType.Create)
-            };
-
+            
             return page;
         }
     }

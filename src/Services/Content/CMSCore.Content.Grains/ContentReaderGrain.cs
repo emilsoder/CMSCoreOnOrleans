@@ -34,7 +34,7 @@ namespace CMSCore.Content.Grains
         {
             try
             {
-                var pages = _context.Pages.Where(x => x.IsRemoved == false || x.IsDisabled == false).ToList();
+                var pages = _context.GetActiveEntities<Page>();
                 var result = GetPageTreeViewModels(pages);
                 return Task.FromResult(result);
                 //return (await _context.Set<Page>().ToListAsync())?.ViewModel();
@@ -46,50 +46,47 @@ namespace CMSCore.Content.Grains
             }
         }
 
-        public Task<PageViewModel> PageById()
+        public async Task<PageViewModel> PageById()
         {
-            var pages = _context.Pages;
-             
-            var page = pages.FirstOrDefault(x => x.Id == ProvidedPrimaryKey && x.IsRemoved == false);
+            var page = await _context.FindActiveEntityAsync<Page>(ProvidedPrimaryKey);
 
             var viewModel = ConvertToPageViewModel(page);
 
-            return Task.FromResult(viewModel);
+            return viewModel;
         }
 
         public Task<PageViewModel> PageByName()
         {
-            try
-            {
-                var set = _context.Pages;
+            return null;
+            //try
+            //{
+            //    var set = _context.Pages;
 
-                var page = set.FirstOrDefault(x => x.NormalizedName == ProvidedPrimaryKey && x.IsRemoved == false);
+            //    var page = set.FirstOrDefault(x => x.NormalizedName == ProvidedPrimaryKey && x.IsRemoved == false);
 
-                return Task.FromResult(ConvertToPageViewModel(page));
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex);
-                return null;
-            }
+            //    return Task.FromResult(ConvertToPageViewModel(page));
+            //}
+            //catch (Exception ex)
+            //{
+            //    _logger?.LogError(ex);
+            //    return null;
+            //}
         }
 
-        public Task<bool> CreateComment(CommentViewModel comment)
+        public async Task<bool> CreateComment(CommentViewModel comment)
         {
             try
             {
-                var feedItem = _context.FeedItems.SingleOrDefault(x => x.Id == ProvidedPrimaryKey && x.IsRemoved == false);
+                var feedItem = await _context.FindActiveEntityAsync<FeedItem>(ProvidedPrimaryKey);
                 if (feedItem == null || !feedItem.CommentsEnabled) throw new Exception("Cannot add comment.");
                 var _comment = new Comment(comment.Text, comment.Text);
-                feedItem.Comments.Add(_comment);
-                _context.SaveChanges();
-
-                return Task.FromResult(true);
+                var result = _context.CreateEntityAsync(_comment, Guid.NewGuid().ToString());
+                return true;
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex);
-                return Task.FromResult(false);
+                return false;
             }
         }
 
@@ -134,13 +131,13 @@ namespace CMSCore.Content.Grains
             }
         }
 
-        public Task<FeedItemViewModel> FeedItemById()
+        public async Task<FeedItemViewModel> FeedItemById()
         {
             try
             {
-                var feedItem = _context.FeedItems?.FirstOrDefault(x => x.Id == ProvidedPrimaryKey);
+                var feedItem = await _context.FindActiveEntityAsync<FeedItem>(ProvidedPrimaryKey);
                 var vm = GetFeedItemViewModel(feedItem);
-                return Task.FromResult(vm);
+                return vm;
             }
             catch (Exception ex)
             {
@@ -151,37 +148,6 @@ namespace CMSCore.Content.Grains
 
         #endregion
 
-        #region Entity history
-
-        public Task<IEnumerable<EntityHistoryViewModel>> EntityHistoryByEntityId()
-        {
-            try
-            {
-                var items = _context.EntityHistory.Where(x => x.EntityId == ProvidedPrimaryKey);
-                return Task.FromResult(GetEntityHistoryViewModels(items));
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex);
-                return null;
-            }
-        }
-
-        public Task<IEnumerable<EntityHistoryViewModel>> EntityHistoryToList()
-        {
-            try
-            {
-                var items = _context.EntityHistory;
-
-                return Task.FromResult(GetEntityHistoryViewModels(items));
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex);
-                return null;
-            }
-        }
-
-        #endregion
+         
     }
 }

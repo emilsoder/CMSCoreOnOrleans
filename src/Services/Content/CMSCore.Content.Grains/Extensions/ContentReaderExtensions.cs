@@ -70,10 +70,7 @@ namespace CMSCore.Content.Grains.Extensions
                     Title = item.Title,
                     Description = item.Description,
                     NormalizedTitle = item.NormalizedTitle,
-
-                    Created = item.Created,
-                    Modified = item.Modified,
-
+                     
                     Tags = item.Tags?.Select(tag => tag.Name).ToArray()
                 });
             }

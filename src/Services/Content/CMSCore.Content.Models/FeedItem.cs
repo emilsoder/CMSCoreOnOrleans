@@ -5,30 +5,35 @@ using System.Text.RegularExpressions;
 
 namespace CMSCore.Content.Models
 {
-    
     public class FeedItem : EntityBase
     {
         public FeedItem()
         {
-            StaticContent = new StaticContent();
         }
 
-        public FeedItem(string title, string description, string content)
+        public FeedItem(string feedId, string title, string description)
             : this()
         {
+            FeedId = feedId;
             Title = title;
             Description = description;
-            StaticContent.Content = content;
         }
 
-        public FeedItem(string title, string description, string content, IList<string> tagNames)
-            : this(title, description, content)
+        public FeedItem(string feedId, string title, string description, string content)
+            : this(feedId, title, description)
+        {
+            Content = content;
+        }
+
+        public FeedItem(string feedId, string title, string description, string content, IList<string> tagNames)
+            : this(feedId, title, description, content)
         {
             Tags = Tags.AsTagCollection(tagNames);
         }
 
-        public FeedItem(string title, string description, string content, IList<string> tagNames, bool commentsEnabled)
-            : this(title, description, content, tagNames)
+        public FeedItem(string feedId, string title, string description, string content, IList<string> tagNames,
+            bool commentsEnabled)
+            : this(feedId, title, description, content, tagNames)
         {
             CommentsEnabled = commentsEnabled;
         }
@@ -47,16 +52,16 @@ namespace CMSCore.Content.Models
 
         public string NormalizedTitle { get; set; }
         public string Description { get; set; }
+        public string Content { get; set; }
 
-        public virtual StaticContent StaticContent { get; set; }
-
+        public bool CommentsEnabled { get; set; } = true;
 
         public string FeedId { get; set; }
         public virtual Feed Feed { get; set; }
 
         public virtual ICollection<Tag> Tags { get; set; }
 
-        public bool CommentsEnabled { get; set; } = true;
+
         public virtual ICollection<Comment> Comments { get; set; }
     }
 

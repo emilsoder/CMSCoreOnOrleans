@@ -13,8 +13,8 @@ namespace CMSCore.Content.GrainInterfaces
 {
     public interface IContentReaderGrain : IGrainWithStringKey
     {
-        Task<IEnumerable<EntityHistoryViewModel>> EntityHistoryByEntityId();
-        Task<IEnumerable<EntityHistoryViewModel>> EntityHistoryToList();
+        //Task<IEnumerable<EntityHistoryViewModel>> EntityHistoryByEntityId();
+        //Task<IEnumerable<EntityHistoryViewModel>> EntityHistoryToList();
 
         Task<FeedItemViewModel> FeedItemById();
         Task<IEnumerable<FeedItemPreviewViewModel>> FeedItemsByFeedId();

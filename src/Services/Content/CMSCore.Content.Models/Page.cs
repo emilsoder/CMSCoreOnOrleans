@@ -43,7 +43,8 @@ namespace CMSCore.Content.Models
             }
         }
 
-        public virtual StaticContent StaticContent { get; set; }
+        public string StaticContent { get; set; }
+        
         public virtual Feed Feed { get; set; }
     }
 }

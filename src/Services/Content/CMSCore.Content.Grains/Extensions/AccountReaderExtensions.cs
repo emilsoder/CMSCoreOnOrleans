@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using CMSCore.Content.GrainInterfaces.Types;
 using CMSCore.Content.Models;
@@ -14,12 +15,10 @@ namespace CMSCore.Content.Grains.Extensions
                 Id = user.Id,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                Created = user.Created,
+                Created = user.Date,
                 Email = user.Email,
                 IdentityUserId = user.IdentityUserId,
-                IsDisabled = user.IsDisabled,
-                IsRemoved = user.IsRemoved,
-                Modified = user.Modified
+                Modified = DateTime.Now
             };
         }
 
